@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.savaari">
+    package="com.example.savaari_driver">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
@@ -24,18 +24,18 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_api_key" />
 
-        <activity android:name=".ride.RideActivity" />
+        <activity android:name="com.example.savaari_driver.ride.RideActivity" />
 
         <activity
-            android:name=".settings.SettingsActivity"
+            android:name="com.example.savaari_driver.settings.SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".ride.RideActivity"/>
+            android:parentActivityName="com.example.savaari_driver.ride.RideActivity"/>
 
-        <activity android:name=".auth.login.LoginActivity" />
+        <activity android:name="com.example.savaari_driver.auth.login.LoginActivity" />
         <activity
-            android:name=".auth.signup.SignUpActivity"
-            android:parentActivityName=".auth.login.LoginActivity" />
-        <activity android:name=".MainActivity">
+            android:name="com.example.savaari_driver.auth.signup.SignUpActivity"
+            android:parentActivityName="com.example.savaari_driver.auth.login.LoginActivity" />
+        <activity android:name="com.example.savaari_driver.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -44,11 +44,11 @@
         </activity>
 
         <service
-            android:name=".services.location.LocationUpdateService"
+            android:name="com.example.savaari_driver.services.location.LocationUpdateService"
             android:stopWithTask="true" />
 
         <service
-            android:name=".services.network.NetworkService"
+            android:name="com.example.savaari_driver.services.network.NetworkService"
             android:stopWithTask="true" />
     </application>
 
