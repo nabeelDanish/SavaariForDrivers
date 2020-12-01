@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:openDrawer="start"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
     tools:context=".ride.RideActivity"
-    android:id="@+id/drawer_layout"
-    android:fitsSystemWindows="true">
+    tools:openDrawer="start">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -17,12 +16,11 @@
         tools:context=".ride.RideActivity">
 
         <androidx.fragment.app.FragmentContainerView
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:id="@+id/map"
-            tools:context=".MapsActivity"
-            android:name="com.google.android.gms.maps.SupportMapFragment" >
-        </androidx.fragment.app.FragmentContainerView>
+            tools:context=".MapsActivity"></androidx.fragment.app.FragmentContainerView>
 
         <RelativeLayout
             android:id="@+id/search_bar"
@@ -48,17 +46,17 @@
             android:id="@+id/menu_btn"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:tint="?attr/textColor"
             android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:layout_marginStart="10dp"
             android:layout_marginTop="10dp"
-            android:elevation="10dp"
             android:backgroundTint="?attr/backgroundColor"
             android:baselineAlignBottom="false"
+            android:elevation="10dp"
             android:scaleX="1.2"
             android:scaleY="1.2"
-            android:src="@drawable/ic_menu" />
+            android:src="@drawable/ic_menu"
+            android:tint="?attr/textColor" />
 
         <ImageButton
             android:id="@+id/user_location"
@@ -80,16 +78,16 @@
 
         <Button
             android:id="@+id/go_btn"
-            android:layout_width="100dp"
+            android:layout_width="wrap_content"
             android:layout_height="100dp"
-            android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
             android:layout_marginBottom="80dp"
             android:background="@drawable/go_btn"
-            android:outlineProvider="background"
             android:elevation="30dp"
-            android:textSize="18dp"
-            android:text="GO" />
+            android:outlineProvider="background"
+            android:text="GO"
+            android:textSize="18dp" />
     </RelativeLayout>
 
     <com.google.android.material.navigation.NavigationView
@@ -100,8 +98,8 @@
         android:background="?attr/backgroundColor"
         android:maxWidth="310dp"
         app:headerLayout="@layout/nav_header"
-        app:itemTextAppearance="@style/nav_item_theme"
-        app:menu="@menu/draw_menu"
         app:itemIconTint="@drawable/nav_foreground_selector"
-        app:itemTextColor="@drawable/nav_foreground_selector"/>
+        app:itemTextAppearance="@style/nav_item_theme"
+        app:itemTextColor="@drawable/nav_foreground_selector"
+        app:menu="@menu/draw_menu" />
 </androidx.drawerlayout.widget.DrawerLayout>

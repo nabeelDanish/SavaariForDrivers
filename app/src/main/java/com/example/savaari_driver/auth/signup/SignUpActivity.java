@@ -1,7 +1,6 @@
 package com.example.savaari_driver.auth.signup;
 
 import android.app.Activity;
-
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.NavUtils;
@@ -33,8 +32,8 @@ import android.widget.Toast;
 
 import com.example.savaari_driver.R;
 
+import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
-import com.example.savaari_driver.services.network.NetworkServiceUtil;
 
 import java.util.Objects;
 
@@ -56,7 +55,8 @@ public class SignUpActivity extends Util implements SignUpResponseListener {
         Log.d("SignUpActivity", "signUpAction");
         
         loadingProgressBar.setVisibility(View.VISIBLE);
-        NetworkServiceUtil.signup(SignUpActivity.this, nickname, username, password);
+        signUpViewModel.signupAction(nickname, username, password);
+        signUpViewModel.isSignUpComplete();
     }
     
     private void signUpResponseAction(Intent intent) {
@@ -93,8 +93,9 @@ public class SignUpActivity extends Util implements SignUpResponseListener {
     /* End of onCreate() method */
 
     private void initialize() {
-        signUpViewModel = ViewModelProviders.of(this, new SignUpViewModelFactory())
-                .get(SignUpViewModel.class);
+        signUpViewModel = ViewModelProviders.of(this, new SignUpViewModelFactory(
+                ((SavaariApplication) this.getApplication()).getRepository())
+        ).get(SignUpViewModel.class);
 
         usernameEditText = findViewById(R.id.username);
         passwordEditText = findViewById(R.id.password);

@@ -4,16 +4,19 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
-
 import com.example.savaari_driver.auth.login.LoginActivity;
 import com.example.savaari_driver.ride.RideActivity;
 
+// TODO Create a Login Check from SharedPreferences
 
-public class MainActivity extends Util {
+public class MainActivity extends Util
+{
 
+    // Main onCreate Function
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
+        // Setting Themes
         switch (ThemeVar.getData())
         {
             case(0):
@@ -27,9 +30,11 @@ public class MainActivity extends Util {
                 break;
         }
 
+        // Setting Layout
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Getting Stored USER_ID
         SharedPreferences sh
                 = getSharedPreferences("AuthSharedPref",
                 MODE_PRIVATE);
@@ -56,56 +61,5 @@ public class MainActivity extends Util {
         }
 
         //TODO: Firebase theme logic implementation in MainActivity
-
-        //mAuth.signOut();
-
-        //FirebaseUser user = mAuth.getCurrentUser();
-
-        /*
-        if (user != null)
-        {
-            final DatabaseReference settingsReference = databaseReference.child("users").child(mAuth.getUid()).child("settings");
-
-            settingsReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(@NonNull DataSnapshot snapshot) {
-                    Boolean syncTheme = (Boolean) snapshot.child("syncTheme").getValue();
-
-                    if (syncTheme != null && syncTheme) {
-                        long themeVar = (long) snapshot.child("themeVar").getValue();
-
-                        ThemeVar.setData((int) themeVar);
-                    }
-                    else {
-                        preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                        ThemeVar.setData(preferences.getInt(getString(R.string.preference_theme_var), 1));
-                    }
-                }
-
-                @Override
-                public void onCancelled(@NonNull DatabaseError error) {
-
-                }
-            });
-            // User is signed in
-
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run()
-                {
-                    Intent i = new Intent(MainActivity.this, TaskActivity.class);
-                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                    startActivity(i);
-                    finish();
-                }
-            }, 600);
-
-
-
-        }
-        else*/
-
-    }
+    }// End of: onCreate()
 }
-
-//
