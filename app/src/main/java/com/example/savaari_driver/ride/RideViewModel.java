@@ -100,11 +100,20 @@ public class RideViewModel extends ViewModel {
             {
                 if (object != null)
                 {
-                    markedActive.setValue(true);
+                    Boolean aBoolean = (Boolean) object;
+                    if (aBoolean) {
+                        Log.d(LOG_TAG, "setMarkActive(): Marked Active!");
+                        markedActive.postValue(true);
+                    }
+                    else {
+                        Log.d(LOG_TAG, "setMarkActive(): Marked Active failed!");
+                        markedActive.postValue(false);
+                    }
                 }
             }
             catch (Exception e)
             {
+                Log.d(LOG_TAG, "setMarkActive(): Error! Exception Thrown");
                 e.printStackTrace();
             }
         }, USER_ID, ACTIVE_STATUS);
@@ -121,11 +130,13 @@ public class RideViewModel extends ViewModel {
                     Log.d(TAG, "checkRideStatus(): Ride Found!");
                     Log.d(TAG, "checkRideStatus(): " + ride.toString());
                     setRideData(ride);
-                    rideFound.setValue(true);
+                    rideFound.postValue(true);
                 }
                 else
                 {
                     // Calling the Function Again
+                    Thread.sleep(3000);
+                    Log.d(TAG, "checkRideStatus(): Checking Ride Status Again!");
                     checkRideStatus();
                 }
             }
@@ -136,11 +147,11 @@ public class RideViewModel extends ViewModel {
             }
         }, USER_ID);
     }
-    public void confirmRideRequest()
+    public void confirmRideRequest(int found_status)
     {
         repository.confirmRideRequest(object -> {
             // TODO Complete what happens after you confirm ride request
-        },USER_ID, IS_TAKING_RIDE.getValue(), ride.getRiderID());
+        },USER_ID, found_status, ride.getRiderID());
     }
 
     // Function on User Data Loaded
@@ -149,18 +160,18 @@ public class RideViewModel extends ViewModel {
             JSONObject result = (JSONObject) r;
             if (result == null) {
                 Log.d(LOG_TAG, "onDataLoaded(): resultString is null");
-                userDataLoaded.setValue(false);
+                userDataLoaded.postValue(false);
             }
             else {
                 username = result.getString("USER_NAME");
                 emailAddress = result.getString("EMAIL_ADDRESS");
                 Log.d("loadUserData(): ", username + ", " + emailAddress);
-                userDataLoaded.setValue(true);
+                userDataLoaded.postValue(true);
             }
         }
         catch (Exception e) {
             e.printStackTrace();
-            userDataLoaded.setValue(false);
+            userDataLoaded.postValue(false);
             Log.d(LOG_TAG, "onDataLoaded(): exception thrown");
         }
     }
@@ -173,7 +184,7 @@ public class RideViewModel extends ViewModel {
             if (resultArray == null)
             {
                 Log.d(TAG, "onUserLocationsLoaded(): resultString is null");
-                userLocationsLoaded.setValue(false);
+                userLocationsLoaded.postValue(false);
             }
             else {
                 Log.d(TAG, "loadUserLocations: " + resultArray.toString());
@@ -193,14 +204,14 @@ public class RideViewModel extends ViewModel {
                     // Adding Final Object
                     mUserLocations.add(userLocation);
                 }
-                userLocationsLoaded.setValue(true);
+                userLocationsLoaded.postValue(true);
             }
         }
         catch (Exception e)
         {
             e.printStackTrace();
             Log.d(TAG, "onUserLocationsLoaded(): Exception thrown!");
-            userLocationsLoaded.setValue(false);
+            userLocationsLoaded.postValue(false);
         }
     }
     // End of Function: onUserLocationsLoaded();

@@ -46,18 +46,18 @@ public class Repository
     public void setMarkActive(OnDataLoadedListener callback, int userID, int active_status)
     {
         executor.execute(() ->
-                NetworkUtil.setMarkActive(userID, active_status));
+                callback.onDataLoaded(NetworkUtil.setMarkActive(userID, active_status)));
     }
 
     // Check ride status
     public void checkRideStatus(OnDataLoadedListener callback, int userID)
     {
-        executor.execute(() -> NetworkUtil.checkRideStatus(userID));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.checkRideStatus(userID)));
     }
 
     // Confirm Ride Request
     public void confirmRideRequest(OnDataLoadedListener callback, int userID, int found_status, int riderID)
     {
-        executor.execute(() -> NetworkUtil.confirmRideRequest(userID, found_status, riderID));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.confirmRideRequest(userID, found_status, riderID)));
     }
 }

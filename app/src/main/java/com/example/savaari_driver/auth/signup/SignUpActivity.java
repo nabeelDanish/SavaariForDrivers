@@ -38,8 +38,9 @@ import com.example.savaari_driver.Util;
 import java.util.Objects;
 
 
-public class SignUpActivity extends Util implements SignUpResponseListener {
+public class SignUpActivity extends Util {
 
+    // Main Attributes
     private com.example.savaari_driver.auth.signup.SignUpViewModel signUpViewModel;
     ProgressBar loadingProgressBar;
     EditText usernameEditText;
@@ -58,13 +59,18 @@ public class SignUpActivity extends Util implements SignUpResponseListener {
         signUpViewModel.signupAction(nickname, username, password);
         signUpViewModel.isSignUpComplete();
     }
-    
-    private void signUpResponseAction(Intent intent) {
-        loadingProgressBar.setVisibility(View.GONE);
 
-        if (intent.getExtras().getBoolean("RESULT")) {
+    // Signup Response Action
+    private void signUpResponseAction(Boolean aBoolean)
+    {
+        loadingProgressBar.setVisibility(View.GONE);
+        if (aBoolean) {
             Toast.makeText(getApplicationContext(), R.string.sign_up_success, Toast.LENGTH_LONG).show();
             NavUtils.navigateUpFromSameTask(SignUpActivity.this);
+        }
+        else
+        {
+            Toast.makeText(getApplicationContext(), R.string.sign_up_failure, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -81,8 +87,6 @@ public class SignUpActivity extends Util implements SignUpResponseListener {
 
         Objects.requireNonNull(getSupportActionBar()).setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-        registerSignUpReceiver();
 
         initialize();
         backToLoginHandler();
@@ -154,6 +158,11 @@ public class SignUpActivity extends Util implements SignUpResponseListener {
 
                 signupAction(successBanner, loadingProgressBar, usernameEditText.getText().toString(),
                         passwordEditText.getText().toString(), nicknameEditText.getText().toString());
+
+                // Setting Response Listener
+                signUpViewModel.isSignUpComplete().observe(SignUpActivity.this, aBoolean -> {
+                    signUpResponseAction(aBoolean);
+                });
             }
         });
     }
@@ -234,34 +243,5 @@ public class SignUpActivity extends Util implements SignUpResponseListener {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    /* Receives response from NetworkService methods */
-    private static class SignUpReceiver extends BroadcastReceiver {
-        private SignUpResponseListener signUpResponseListener;
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (intent.getExtras().getString("TASK").equals("signup")) {
-                signUpResponseListener = (SignUpResponseListener) context;
-                signUpResponseListener.onResponseReceived(intent);
-            }
-        }
-    }
-
-    SignUpReceiver signUpReceiver;
-
-    /* Register receiver */
-    public void registerSignUpReceiver() {
-        signUpReceiver = new SignUpReceiver();
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("RESULT");
-
-        registerReceiver(signUpReceiver, intentFilter);
-    }
-
-    @Override
-    public void onResponseReceived(Intent intent) {
-        signUpResponseAction(intent);
     }
 }

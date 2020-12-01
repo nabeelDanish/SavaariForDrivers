@@ -1,7 +1,5 @@
 package com.example.savaari_driver.ride;
 
-// TODO Remove the Search functions from Driver App
-
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -34,6 +32,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.savaari_driver.R;
+import com.example.savaari_driver.Ride;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.UserLocation;
 import com.example.savaari_driver.Util;
@@ -86,7 +85,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     private RideViewModel rideViewModel = null;
 
     // Util Variables
-    private static final String TAG = "RideActivity";
+    private final String TAG = RideActivity.this.getClass().getCanonicalName();
 
     // Map related Variables
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
@@ -119,7 +118,6 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     private int ACTIVE_STATUS = 0;
     private ArrayList<UserLocation> mUserLocations;
     private Location mUserLocation;
-    private final UserLocation driverLocation = new UserLocation();
 
     // ---------------------------------------------------------------------------------------------
     //                                    Main Methods
@@ -150,6 +148,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
         }
         else {
             centerGPSButton = findViewById(R.id.user_location);
+            centerGPSButton.setEnabled(true);
             rideViewModel = new ViewModelProvider(this, new RideViewModelFactory(USER_ID,
                     ((SavaariApplication) this.getApplication()).getRepository())
             ).get(RideViewModel.class);
@@ -164,7 +163,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                     // Create the Map Maker to Rider Location
                     MarkerOptions options = new MarkerOptions()
                             .position(rideViewModel.getRide().getPickupLocation())
-                            .title("Pickup Location");
+                            .title("Pickup");
                     pickupMarker = googleMap.addMarker(options);
 
                     calculateDirections(new LatLng(mUserLocation.getLatitude(), mUserLocation.getLongitude()), pickupMarker, false);
@@ -282,7 +281,8 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     }
 
     /* Method for adding a destination */
-    private void setDestination(LatLng latLng, String title) {
+    private void setDestination(LatLng latLng, String title)
+    {
         moveCamera(latLng);
 
         if (destinationMarker != null) {
@@ -297,46 +297,6 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
         calculateDirections(rideViewModel.getRide().getPickupLocation(),
                 destinationMarker, true);
     }
-
-    /*
-     * Initialize Autocomplete Support Fragment
-     * onPlaceSelected() implementation
-     */
-    private void initializeAutocomplete() {
-        if (!Places.isInitialized()) {
-            Places.initialize(getApplicationContext(), getString(R.string.google_maps_api_key), Locale.US);
-        }
-
-        // Initialize the AutocompleteSupportFragment.
-        AutocompleteSupportFragment autocompleteFragment = (AutocompleteSupportFragment)
-                getSupportFragmentManager().findFragmentById(R.id.autocomplete_fragment);
-
-        // Specify the types of place data to return.
-        assert autocompleteFragment != null;
-        autocompleteFragment.setPlaceFields(Arrays.asList(Place.Field.LAT_LNG, Place.Field.ID, Place.Field.NAME));
-
-        // Set up a PlaceSelectionListener to handle the response.
-        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
-            @Override
-            public void onPlaceSelected(@NonNull Place place) {
-
-                String title = ((place.getName() == null)?
-                        ((place.getAddress() == null)?  "" : place.getAddress()) : place.getName());
-
-                setDestination(Objects.requireNonNull(place.getLatLng()), title);
-
-                Log.d("onPlaceSelected: ", "Place: " + place.getName() + ", " + place.getId());
-            }
-
-            @Override
-            public void onError(@NonNull Status status) {
-                // TODO: Handle the error.
-                Toast.makeText(RideActivity.this, "Could not navigate to selected place", Toast.LENGTH_SHORT).show();
-                Log.d("init(): ", "onPlaceSelectedListener(): An error occurred: " + status);
-            }
-        });
-    }
-
     private void initializeNavigationBar() {
         drawer = findViewById(R.id.drawer_layout);
 
@@ -363,12 +323,12 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     private void init() {
         Log.d(TAG, "init: initializing");
 
-
+        // Initializing UI
         initializeNavigationBar();
+
+        // Loading Data from API
         loadUserData();
         loadUserLocations();
-
-        initializeAutocomplete();
 
         // Main Button to start Search Ride
         searchRideButton = findViewById(R.id.go_btn);
@@ -412,6 +372,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
             if (aBoolean)
             {
                 Toast.makeText(RideActivity.this, "Marked Active", Toast.LENGTH_SHORT).show();
+                searchRideButton.setEnabled(false);
                 checkRideStatus();
             }
             else
@@ -432,13 +393,14 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
         {
             // Handle Confirm Ride Request
             rideViewModel.setIsTakingRide(1);
+            rideViewModel.confirmRideRequest(1);
         });
         alertDialogBuilder.setNegativeButton("Cancel", (dialogInterface, i) ->
         {
             // Handle Reject Ride Request
             rideViewModel.setIsTakingRide(0);
+            rideViewModel.confirmRideRequest(0);
         });
-        rideViewModel.confirmRideRequest();
 
         // Showing the Dialog
         AlertDialog alertDialog = alertDialogBuilder.create();
@@ -470,9 +432,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     /* Function for loading User Location Data */
     private void loadUserLocations()
     {
-        rideViewModel.getUserLocations();
         rideViewModel.isLiveUserLocationsLoaded().observe(this, aBoolean -> {
-
             if (aBoolean)
             {
                 mUserLocations = rideViewModel.getUserLocations();
@@ -685,11 +645,8 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                 pickupMarker.setSnippet("Duration: " + route.legs[0].duration);
                 pickupMarker.showInfoWindow();
             }
-
             zoomRoute(newDecodedPath);
-
             searchRideButton.setEnabled(true);
-
             //}
         });
     }

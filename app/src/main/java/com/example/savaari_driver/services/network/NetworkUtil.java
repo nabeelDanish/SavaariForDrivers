@@ -18,7 +18,7 @@ public class NetworkUtil
     // Main Attributes
     private static final NetworkUtil networkUtil = new NetworkUtil();
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://5b1679483563.ngrok.io/";
+    private static final String urlAddress = "https://12c3377db210.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // Private Constructor
     private NetworkUtil()
@@ -268,7 +268,7 @@ public class NetworkUtil
         {
             jsonParam.put("USER_ID", userID);
             jsonParam.put("ACTIVE_STATUS", active_status);
-            return sendPost(urlAddress + "setMarkActive", jsonParam, true).getInt("STATUS_CODE") == 200;
+            return sendPost(urlAddress + "setMarkActive", jsonParam, true).getInt("STATUS") == 200;
         }
         catch (Exception e)
         {
@@ -302,6 +302,7 @@ public class NetworkUtil
             jsonParam.put("USER_ID", userID);
             jsonParam.put("FOUND_STATUS", found_status);
             jsonParam.put("RIDER_ID", riderID);
+            Log.d(TAG, "confirmRideRequest(): " + jsonParam.toString());
             return sendPost(urlAddress + "confirmRideRequest", jsonParam, true);
         }
         catch (Exception e)
