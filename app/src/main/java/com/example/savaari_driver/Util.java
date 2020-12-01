@@ -7,14 +7,20 @@ import android.view.animation.AccelerateInterpolator;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.InputMethodManager;
-
 import androidx.appcompat.app.AppCompatActivity;
 
-public class Util extends AppCompatActivity {
+public class Util extends AppCompatActivity
+{
 
-    public Util() {
+    // Default Constructor
+    public Util()
+    {
+        // Empty
     }
 
+    // ---------------------------------------------------------------------------------------------
+    //                                 FUNCTIONS FOR UI ANIMATIONS
+    // ---------------------------------------------------------------------------------------------
     public static void hideKeyboard(Activity activity) {
 
         InputMethodManager imm = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
@@ -57,6 +63,7 @@ public class Util extends AppCompatActivity {
         return outToBottom;
     }
 
+    // Function for selection of theme
     public static void themeSelect(final Context context) {
 
         switch (ThemeVar.getData())

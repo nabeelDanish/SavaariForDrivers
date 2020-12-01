@@ -18,6 +18,7 @@ public class NetworkUtil
     // Main Attributes
     private static final NetworkUtil networkUtil = new NetworkUtil();
     private static final String TAG = "NetworkUtil";
+    private static final String urlAddress = "https://5b1679483563.ngrok.io/";
 
     // Private Constructor
     private NetworkUtil()
@@ -140,7 +141,7 @@ public class NetworkUtil
     }
 
     // Send Last Location
-    public static int sendLastLocation(String urladdress, int currentUserID, double latitude, double longitude)
+    public static int sendLastLocation(int currentUserID, double latitude, double longitude)
     {
         try
         {
@@ -162,7 +163,7 @@ public class NetworkUtil
             Log.d(TAG, "sendLastLocation: TimeStamp: " + currentTimeStamp);
 
             // Sending JSON
-            return NetworkUtil.sendPost(urladdress, jsonParam, false).getBoolean("result") ? 1 : 0;
+            return NetworkUtil.sendPost(urlAddress + "saveDriverLocation", jsonParam, false).getBoolean("result") ? 1 : 0;
         }
         catch (JSONException e)
         {
@@ -174,14 +175,14 @@ public class NetworkUtil
     /*
     *   SET OF RIDER-SIDE MATCHMAKING FUNCTIONS ----------------------------------------------------
     */
-    public static boolean findDriver(String urladdress, int currentUserID, double latitude, double longitude) {
+    public static boolean findDriver(int currentUserID, double latitude, double longitude) {
         try {
             JSONObject jsonParam = new JSONObject();
             jsonParam.put("USER_ID", currentUserID);
             jsonParam.put("LATITUDE", latitude);
             jsonParam.put("LONGITUDE", longitude);
 
-            return (NetworkUtil.sendPost(urladdress, jsonParam, true).getInt("STATUS_CODE") == 200);
+            return (NetworkUtil.sendPost(urlAddress, jsonParam, true).getInt("STATUS_CODE") == 200);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -190,44 +191,27 @@ public class NetworkUtil
         }
     }
 
-    /*
-    * Checks FIND_STATUS for rider
-    * 0 -> Invalid request
-    * 1 -> Driver hasn't responded
-    * 2 -> Driver accepted request
-    * */
-    public static JSONObject checkFindStatus(String urlAddress, int currentUserID) {
-
-        try {
-            JSONObject jsonParam = new JSONObject();
-            jsonParam.put("USER_ID", currentUserID);
-
-            return (NetworkUtil.sendPost(urlAddress, jsonParam, true));
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            Log.d("NetworkUtil: ", "findDriver() Exception");
-            return null;
-        }
-    }
-
-    /*
-    *  END OF RIDER-SIDE MATCHMAKING FUNCTIONS -----------------------------------------------------
-    */
-
     // Sign-Up
-    public static boolean signup(String urlAddress, String username, String emailAddress, String password) throws JSONException
+    public static boolean signup(String username, String emailAddress, String password)
     {
-        Log.d("NetworkUtil: ", "signup() called");
-        JSONObject jsonParam = new JSONObject();
-        jsonParam.put("username", username);
-        jsonParam.put("email_address", emailAddress);
-        jsonParam.put("password", password);
+        try {
+            Log.d("NetworkUtil: ", "signup() called");
+            JSONObject jsonParam = new JSONObject();
+            jsonParam.put("username", username);
+            jsonParam.put("email_address", emailAddress);
+            jsonParam.put("password", password);
 
-        return (sendPost(urlAddress, jsonParam, true).getInt("STATUS_CODE") == 200);
+            return (sendPost(urlAddress + "add_driver", jsonParam, true).getInt("STATUS_CODE") == 200);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.d(TAG, "signup(): Failed!");
+            return false;
+        }
     }
     // Login
-    public static int login(String urlAddress, String username, String password)
+    public static int login(String username, String password)
     {
         try
         {
@@ -237,7 +221,7 @@ public class NetworkUtil
             jsonParam.put("password", password);
 
             // Sending Request
-            JSONObject results = sendPost(urlAddress, jsonParam, true);
+            JSONObject results = sendPost(urlAddress + "login_driver", jsonParam, true);
 
             return results.getInt("USER_ID");
         } catch (Exception e)
@@ -247,13 +231,13 @@ public class NetworkUtil
         }
     }
     // Loading User Data
-    public static JSONObject loadUserData(String urlAddress, int currentUserID)
+    public static JSONObject loadUserData(int currentUserID)
     {
         JSONObject jsonParam = new JSONObject();
         try
         {
             jsonParam.put("USER_ID", currentUserID);
-            return sendPost(urlAddress, jsonParam, true);
+            return sendPost(urlAddress + "driver_data", jsonParam, true);
         } catch (Exception e)
         {
             e.printStackTrace();
@@ -262,17 +246,68 @@ public class NetworkUtil
     }
 
     // Get User Locations
-    public static JSONArray getUserLocations(String urlAddress)
+    public static JSONArray getUserLocations()
     {
         JSONObject jsonParam = new JSONObject();
         try
         {
             jsonParam.put("Dummy", 0);
-            return sendPostArray(urlAddress, jsonParam, true);
+            return sendPostArray(urlAddress + "getDriverLocations", jsonParam, true);
         }
         catch (Exception e)
         {
             e.printStackTrace();
+            return null;
+        }
+    }
+    // Set Mark Active
+    public static Boolean setMarkActive(int userID, int active_status)
+    {
+        JSONObject jsonParam = new JSONObject();
+        try
+        {
+            jsonParam.put("USER_ID", userID);
+            jsonParam.put("ACTIVE_STATUS", active_status);
+            return sendPost(urlAddress + "setMarkActive", jsonParam, true).getInt("STATUS_CODE") == 200;
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.d(TAG, "setMarkActive(): Exception thrown!");
+            return null;
+        }
+    }
+    // Check Ride Status
+    public static JSONObject checkRideStatus(int userID)
+    {
+        JSONObject jsonParam = new JSONObject();
+        try
+        {
+            jsonParam.put("USER_ID", userID);
+            return sendPost(urlAddress + "checkRideStatus", jsonParam, true);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.d(TAG, "checkRideStatus(): Exception thrown!");
+            return null;
+        }
+    }
+    // Confirming Ride Request
+    public static JSONObject confirmRideRequest(int userID, int found_status, int riderID)
+    {
+        JSONObject jsonParam = new JSONObject();
+        try
+        {
+            jsonParam.put("USER_ID", userID);
+            jsonParam.put("FOUND_STATUS", found_status);
+            jsonParam.put("RIDER_ID", riderID);
+            return sendPost(urlAddress + "confirmRideRequest", jsonParam, true);
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            Log.d(TAG, "confirmRideRequest(): Exception thrown!");
             return null;
         }
     }

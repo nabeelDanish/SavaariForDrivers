@@ -1,6 +1,8 @@
 package com.example.savaari_driver.auth.login;
 
 import android.util.Log;
+
+import com.example.savaari_driver.Repository;
 import com.example.savaari_driver.auth.AuthInputValidator;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -10,17 +12,44 @@ import com.example.savaari_driver.R;
 
 public class LoginViewModel extends ViewModel {
 
+    // Main Attributes
+    private final String LOG_TAG = this.getClass().getCanonicalName();
+    private final MutableLiveData<Integer> userID = new MutableLiveData<>(-1);
     private MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
     private MutableLiveData<RecoveryFormState> recoveryFormState = new MutableLiveData<>();
+    private Repository repository;
 
+    // Methods
     LiveData<LoginFormState> getLoginFormState() {
         return loginFormState;
     }
-
     LiveData<RecoveryFormState> getRecoveryFormState() {
         return recoveryFormState;
     }
 
+    public LiveData<Integer> getUserID() {
+        return userID;
+    }
+
+    public LoginViewModel(Repository repository)
+    {
+        this.repository = repository;
+    }
+
+    public void loginAction(String username, String password) {
+        repository.login(object -> {
+            Integer ID;
+            try {
+                ID = (Integer) object;
+                userID.postValue(ID);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                Log.d(LOG_TAG, "loginAction(): exception");
+            }
+
+        }, username, password);
+    }
 
     public void recoveryEmailDataChanged(String username) {
         if (!AuthInputValidator.isUserNameValid(username))

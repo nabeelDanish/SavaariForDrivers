@@ -1,19 +1,53 @@
 package com.example.savaari_driver.auth.signup;
 
 import android.util.Log;
+import com.example.savaari_driver.Repository;
 import com.example.savaari_driver.auth.AuthInputValidator;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
-
 import com.example.savaari_driver.R;
 
-public class SignUpViewModel extends ViewModel {
+public class SignUpViewModel extends ViewModel
+{
+    // Main Attributes
+    private final String LOG_TAG = this.getClass().getCanonicalName();
+    private final MutableLiveData<SignUpFormState> signupFormState = new MutableLiveData<>();
+    private final Repository repository;
+    private final MutableLiveData<Boolean> signUpComplete = new MutableLiveData<>(false);
 
-    private MutableLiveData<SignUpFormState> signupFormState = new MutableLiveData<>();
+    // Main Constructor
+    public SignUpViewModel(Repository repository)
+    {
+        this.repository = repository;
+    }
 
     LiveData<SignUpFormState> getSignUpFormState() {
         return signupFormState;
+    }
+
+    public void signupAction(String nickname, String username, String password) {
+        repository.signup(object -> {
+            boolean result;
+            try {
+                result = (boolean) object;
+                signUpComplete.postValue(result);
+            }
+            catch (Exception e) {
+                e.printStackTrace();
+                Log.d(LOG_TAG, "signupAction(): exception");
+            }
+        }, nickname, username, password);
+    }
+
+    public LiveData<SignUpFormState> getSignupFormState()
+    {
+        return signupFormState;
+    }
+
+    public LiveData<Boolean> isSignUpComplete()
+    {
+        return signUpComplete;
     }
 
     public void signUpDataChanged(String username, String password, String nickname)

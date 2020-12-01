@@ -27,10 +27,10 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProviders;
 
 import com.example.savaari_driver.R;
+import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
 import com.example.savaari_driver.auth.signup.SignUpActivity;
 import com.example.savaari_driver.ride.RideActivity;
-import com.example.savaari_driver.services.network.NetworkServiceUtil;
 
 public class LoginActivity extends Util implements LoginResponseListener {
 
@@ -74,8 +74,9 @@ public class LoginActivity extends Util implements LoginResponseListener {
     }
 
     private void init() {
-        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory())
-                .get(LoginViewModel.class);
+        loginViewModel = ViewModelProviders.of(this, new LoginViewModelFactory(
+                ((SavaariApplication) this.getApplication()).getRepository())
+        ).get(LoginViewModel.class);
 
         usernameEditText = findViewById(R.id.username);
         passwordEditText = findViewById(R.id.password);
@@ -331,7 +332,7 @@ public class LoginActivity extends Util implements LoginResponseListener {
     private void loginAction(final ProgressBar loadingProgressBar, final String username, final String password) {
 
         loadingProgressBar.setVisibility(View.VISIBLE);
-        NetworkServiceUtil.login(LoginActivity.this, username, password);
+        loginViewModel.loginAction(username, password);
     }
 
     @Override
