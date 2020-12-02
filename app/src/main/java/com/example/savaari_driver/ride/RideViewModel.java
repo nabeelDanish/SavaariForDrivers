@@ -1,7 +1,6 @@
 package com.example.savaari_driver.ride;
 
 import android.util.Log;
-import android.widget.Toast;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -11,6 +10,7 @@ import com.example.savaari_driver.Repository;
 import com.example.savaari_driver.Ride;
 import com.example.savaari_driver.UserLocation;
 import com.google.android.gms.maps.model.LatLng;
+import com.example.savaari_driver.Util;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,18 +34,20 @@ public class RideViewModel extends ViewModel {
     private LatLng userCoordinates = new LatLng(0,0);
 
     /* Ride Data */
-    private final MutableLiveData<Integer> IS_TAKING_RIDE = new MutableLiveData<Integer>(0);
     private Ride ride;
 
     /* User locations data for pinging */
     private final ArrayList<UserLocation> mUserLocations = new ArrayList<>();
 
     /* Data Loaded status flags */
+    private final MutableLiveData<Integer> IS_TAKING_RIDE = new MutableLiveData<Integer>(0);
     private final MutableLiveData<Boolean> userDataLoaded = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> userLocationsLoaded = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> markedActive = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> rideFound = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> nearPickup = new MutableLiveData<>(false);
 
+    // Main Constructor
     public RideViewModel(int USER_ID, Repository repository)
     {
         this.USER_ID = USER_ID;
@@ -78,10 +80,23 @@ public class RideViewModel extends ViewModel {
         return markedActive;
     }
     public LiveData<Boolean> isRideFound() { return rideFound; }
+    public LiveData<Boolean> isNearPickup() { return nearPickup; }
 
     /* Need a setter since coordinates are received from activity */
     public void setUserCoordinates(double latitude, double longitude) {
         userCoordinates = new LatLng(latitude, longitude);
+
+        // Check if the Distance is near Pickup
+        if (IS_TAKING_RIDE.getValue() == 1)
+        {
+            double distance = Util.distance(latitude, longitude, ride.getPickupLocation().latitude, ride.getPickupLocation().longitude);
+            Log.d(LOG_TAG, "setUserCoordinates(): Distance = " + distance);
+            if (distance <= 200)
+            {
+                Log.d(LOG_TAG, "setUserCoordinates(): setting near pickup to true");
+                nearPickup.setValue(true);
+            }
+        }
     }
 
     // Function using the repository
@@ -124,40 +139,17 @@ public class RideViewModel extends ViewModel {
             }
         }, USER_ID, ACTIVE_STATUS);
     }
-    public void checkRideStatus()
-    {
-        repository.checkRideStatus(object -> {
-            try
-            {
-                JSONObject ride = (JSONObject) object;
-                int status = ride.getInt("STATUS");
-                if (status == 200)
-                {
-                    Log.d(TAG, "checkRideStatus(): Ride Found!");
-                    Log.d(TAG, "checkRideStatus(): " + ride.toString());
-                    setRideData(ride);
-                    rideFound.postValue(true);
-                }
-                else
-                {
-                    // Calling the Function Again
-                    Thread.sleep(3000);
-                    Log.d(TAG, "checkRideStatus(): Checking Ride Status Again!");
-                    checkRideStatus();
-                }
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-                Log.d(TAG, "onCheckRideStatus(): Exception thrown!");
-            }
-        }, USER_ID);
-    }
+
     public void confirmRideRequest(int found_status)
     {
         repository.confirmRideRequest(object -> {
             // TODO Complete what happens after you confirm ride request
         },USER_ID, found_status, ride.getRiderID());
+    }
+
+    public void markArrival()
+    {
+        // repository
     }
 
     // Function on User Data Loaded

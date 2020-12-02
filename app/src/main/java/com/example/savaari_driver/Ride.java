@@ -6,6 +6,7 @@ public class Ride
 {
     // Main Attributes
     int riderID;
+    int rideStatus;
     String userName;
     LatLng pickupLocation;
     LatLng destinationLocation;
@@ -59,5 +60,11 @@ public class Ride
     public void setDestinationLocation(LatLng destinationLocation)
     {
         this.destinationLocation = destinationLocation;
+    }
+    public int getRideStatus() {
+        return rideStatus;
+    }
+    public void setRideStatus(int rideStatus) {
+        this.rideStatus = rideStatus;
     }
 }

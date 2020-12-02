@@ -4,8 +4,11 @@ import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -30,6 +33,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
@@ -112,7 +116,19 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     private final int ACTIVE_STATUS = 0;
     private ArrayList<UserLocation> mUserLocations;
     private Location mUserLocation;
-
+    // Broadcast Receiver Function
+    BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver()
+    {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            Log.d(TAG, "onReceive(): 10 seconds passed!");
+            Bundle bundle = intent.getExtras();
+            Location location = (Location) bundle.get("Location");
+            rideViewModel.setUserCoordinates(location.getLatitude(), location.getLongitude());
+            // moveCamera(new LatLng(location.getLatitude(), location.getLongitude()));
+        }
+    };
     // ---------------------------------------------------------------------------------------------
     //                                    Main Methods
     // ---------------------------------------------------------------------------------------------
@@ -123,6 +139,9 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
         themeSelect(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_ride);
+
+        // Registering Receiver
+        LocalBroadcastManager.getInstance(RideActivity.this).registerReceiver(locationUpdateReceiver, new IntentFilter("Update"));
 
         Intent recvIntent = getIntent();
         USER_ID = recvIntent.getIntExtra("USER_ID", -1);
@@ -164,6 +183,14 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
 
                     calculateDirections(new LatLng(mUserLocation.getLatitude(), mUserLocation.getLongitude()), pickupMarker, false);
                     setDestination(rideViewModel.getRide().getDestinationLocation(), "Destination");
+
+                    // Create the Call for Near Pickup Location
+                    rideViewModel.isNearPickup().observe(RideActivity.this, Boolean -> {
+                        if (Boolean)
+                        {
+                            confirmNearPickupLocation();
+                        }
+                    });
                 }
             });
         }
@@ -396,6 +423,26 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
             // Handle Reject Ride Request
             rideViewModel.setIsTakingRide(0);
             rideViewModel.confirmRideRequest(0);
+        });
+
+        // Showing the Dialog
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
+    }
+
+    private void confirmNearPickupLocation() {
+        // Show Dialog
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setMessage("Near Pickup Location");
+
+        // Setting Buttons
+        alertDialogBuilder.setPositiveButton("Mark Arrival", (dialogInterface, i) ->
+        {
+            rideViewModel.markArrival();
+        });
+        alertDialogBuilder.setNegativeButton("Cancel", (dialogInterface, i) ->
+        {
+            // Do nothing:
         });
 
         // Showing the Dialog
