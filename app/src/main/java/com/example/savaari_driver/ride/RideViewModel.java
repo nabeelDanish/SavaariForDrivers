@@ -100,10 +100,16 @@ public class RideViewModel extends ViewModel {
             {
                 if (object != null)
                 {
-                    Boolean aBoolean = (Boolean) object;
+                    JSONObject ride = (JSONObject) object;
+                    boolean aBoolean = ride.getInt("STATUS") == 200;
                     if (aBoolean) {
                         Log.d(LOG_TAG, "setMarkActive(): Marked Active!");
                         markedActive.postValue(true);
+
+                        Log.d(TAG, "checkRideStatus(): Ride Found!");
+                        Log.d(TAG, "checkRideStatus(): " + ride.toString());
+                        setRideData(ride);
+                        rideFound.postValue(true);
                     }
                     else {
                         Log.d(LOG_TAG, "setMarkActive(): Marked Active failed!");

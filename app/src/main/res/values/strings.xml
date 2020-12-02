@@ -126,6 +126,7 @@
     <string name="dark_blue_theme">Dark Blue Theme</string>
     <string name="sign_up_failure">Sign Up Failed!</string>
     <string name="active">ACTIVE</string>
+    <string name="app_title_2">for driver</string>
 
 
 </resources>

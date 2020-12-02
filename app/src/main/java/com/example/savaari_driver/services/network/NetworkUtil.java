@@ -18,7 +18,7 @@ public class NetworkUtil
     // Main Attributes
     private static final NetworkUtil networkUtil = new NetworkUtil();
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://12c3377db210.ngrok.io/"; // remember to add a "/" at the end of the url
+    private static final String urlAddress = "https://a31f00a879e7.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // Private Constructor
     private NetworkUtil()
@@ -261,14 +261,14 @@ public class NetworkUtil
         }
     }
     // Set Mark Active
-    public static Boolean setMarkActive(int userID, int active_status)
+    public static JSONObject setMarkActive(int userID, int active_status)
     {
         JSONObject jsonParam = new JSONObject();
         try
         {
             jsonParam.put("USER_ID", userID);
-            jsonParam.put("ACTIVE_STATUS", active_status);
-            return sendPost(urlAddress + "setMarkActive", jsonParam, true).getInt("STATUS") == 200;
+            jsonParam.put("ACTIVE_STATUS", active_status == 1);
+            return sendPost(urlAddress + "setMarkActive", jsonParam, true);
         }
         catch (Exception e)
         {

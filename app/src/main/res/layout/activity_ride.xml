@@ -20,7 +20,7 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:context=".MapsActivity"></androidx.fragment.app.FragmentContainerView>
+            tools:context=".MapsActivity" />
 
         <ImageButton
             android:id="@+id/menu_btn"
@@ -40,8 +40,8 @@
 
         <ImageButton
             android:id="@+id/user_location"
-            android:layout_width="50dp"
-            android:layout_height="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
             android:layout_alignParentBottom="true"
             android:layout_marginStart="342dp"
@@ -61,9 +61,9 @@
             android:layout_height="50dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="20dp"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
+            android:layout_marginBottom="20dp"
             android:background="@drawable/go_btn"
             android:elevation="30dp"
             android:outlineProvider="background"

@@ -32,7 +32,6 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.example.savaari_driver.R;
-import com.example.savaari_driver.Ride;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.UserLocation;
 import com.example.savaari_driver.Util;
@@ -54,12 +53,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.Task;
-import com.google.android.libraries.places.api.Places;
 import com.google.android.libraries.places.api.model.Place;
 import com.google.android.libraries.places.widget.Autocomplete;
 import com.google.android.libraries.places.widget.AutocompleteActivity;
-import com.google.android.libraries.places.widget.AutocompleteSupportFragment;
-import com.google.android.libraries.places.widget.listener.PlaceSelectionListener;
 import com.google.android.material.navigation.NavigationView;
 import com.google.maps.DirectionsApiRequest;
 import com.google.maps.GeoApiContext;
@@ -69,9 +65,7 @@ import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsRoute;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 public class RideActivity extends Util implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener,
@@ -115,7 +109,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
 
     // Ride View Model Data: Stored in Activity
     private int USER_ID = -1;
-    private int ACTIVE_STATUS = 0;
+    private final int ACTIVE_STATUS = 0;
     private ArrayList<UserLocation> mUserLocations;
     private Location mUserLocation;
 
@@ -153,7 +147,9 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                     ((SavaariApplication) this.getApplication()).getRepository())
             ).get(RideViewModel.class);
 
-            getLocationPermission();
+            // Checking services and getting permissions
+            if (isServicesOK())
+                getLocationPermission();
 
             // Creating the Observer for Ride Taking
             rideViewModel.getIsTakingRide().observe(RideActivity.this, integer ->
@@ -337,7 +333,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
             v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
 
             // Stop the Location Update Service
-            LocationUpdateUtil.stopLocationService(RideActivity.this);
+            // LocationUpdateUtil.stopLocationService(RideActivity.this);
             startMatchMaking();
         });
         centerGPSButton.setOnClickListener(v -> getDeviceLocation()); //moveCamera to user location
@@ -349,7 +345,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
 
     private void checkRideStatus()
     {
-        rideViewModel.checkRideStatus();
+        // rideViewModel.checkRideStatus();
         rideViewModel.isRideFound().observe(this, aBoolean -> {
             if (aBoolean)
             {
@@ -372,7 +368,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
             if (aBoolean)
             {
                 Toast.makeText(RideActivity.this, "Marked Active", Toast.LENGTH_SHORT).show();
-                searchRideButton.setEnabled(false);
+                searchRideButton.setVisibility(View.GONE);
                 checkRideStatus();
             }
             else
@@ -468,8 +464,8 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
             if (resultCode == AutocompleteActivity.RESULT_OK) {
                 assert data != null;
                 Place place = Autocomplete.getPlaceFromIntent(data);
-                String title = ((place.getName() == null) ?
-                        ((place.getAddress() == null) ? "" : place.getAddress()) : place.getName());
+//                String title = ((place.getName() == null) ?
+//                        ((place.getAddress() == null) ? "" : place.getAddress()) : place.getName());
 
                 Log.i(TAG, "Place: " + place.getName() + ", " + place.getId() + ", lat: " + Objects.requireNonNull(place.getLatLng()).latitude
                         + ", lon: " + place.getLatLng().longitude);
