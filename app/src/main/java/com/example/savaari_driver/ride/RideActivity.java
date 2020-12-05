@@ -37,10 +37,10 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
-import com.example.savaari_driver.UserLocation;
 import com.example.savaari_driver.Util;
 import com.example.savaari_driver.services.location.LocationUpdateUtil;
 import com.example.savaari_driver.settings.SettingsActivity;
+import com.example.savaari_driver.user.UserLocation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.Status;
@@ -146,7 +146,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
         Intent recvIntent = getIntent();
         USER_ID = recvIntent.getIntExtra("USER_ID", -1);
 
-        mUserLocations = new ArrayList<>();
+        mUserLocations = new ArrayList<UserLocation>();
 
         if (USER_ID == -1) {
             SharedPreferences sh
@@ -182,7 +182,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                     pickupMarker = googleMap.addMarker(options);
 
                     calculateDirections(new LatLng(mUserLocation.getLatitude(), mUserLocation.getLongitude()), pickupMarker, false);
-                    setDestination(rideViewModel.getRide().getDestinationLocation(), "Destination");
+                    setDestination(rideViewModel.getRide().getDropoffLocation(), "Destination");
 
                     // Create the Call for Near Pickup Location
                     rideViewModel.isNearPickup().observe(RideActivity.this, Boolean -> {
@@ -409,7 +409,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     {
         // Show Dialog
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage("Confirm Ride Request\nUserName = " + rideViewModel.getRide().getUserName());
+        alertDialogBuilder.setMessage("Confirm Ride Request\nUserName = " + rideViewModel.getRide().getRider().getUsername());
 
         // Setting Buttons
         alertDialogBuilder.setPositiveButton("Take Ride", (dialogInterface, i) ->

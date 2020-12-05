@@ -1,4 +1,4 @@
-package com.example.savaari_driver;
+package com.example.savaari_driver.user;
 
 public class UserLocation
 {

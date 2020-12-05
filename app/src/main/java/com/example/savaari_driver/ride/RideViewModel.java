@@ -7,8 +7,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.savaari_driver.Repository;
-import com.example.savaari_driver.Ride;
-import com.example.savaari_driver.UserLocation;
+import com.example.savaari_driver.user.UserLocation;
 import com.google.android.gms.maps.model.LatLng;
 import com.example.savaari_driver.Util;
 
@@ -144,7 +143,7 @@ public class RideViewModel extends ViewModel {
     {
         repository.confirmRideRequest(object -> {
             // TODO Complete what happens after you confirm ride request
-        },USER_ID, found_status, ride.getRiderID());
+        },USER_ID, found_status, ride.getRider().getUserID());
     }
 
     public void markArrival()
@@ -220,16 +219,16 @@ public class RideViewModel extends ViewModel {
         ride = new Ride();
         try
         {
-            ride.setRiderID(jsonObject.getInt("RIDER_ID"));
-            ride.setUserName(jsonObject.getString("USER_NAME"));
+            ride.getRider().setUserID(jsonObject.getInt("RIDER_ID"));
+            ride.getRider().setUsername(jsonObject.getString("USER_NAME"));
 
             double sourceLat = jsonObject.getDouble("SOURCE_LAT");
             double sourceLong = jsonObject.getDouble("SOURCE_LONG");
             double destLat = jsonObject.getDouble("DEST_LAT");
             double destLong = jsonObject.getDouble("DEST_LONG");
 
-            ride.setPickupLocation(new LatLng(sourceLat, sourceLong));
-            ride.setDestinationLocation(new LatLng(destLat, destLong));
+            ride.setPickupLocation(new LatLng(sourceLat, sourceLong), "");
+            ride.setDropoffLocation(new LatLng(destLat, destLong), "");
         }
         catch (Exception e)
         {
