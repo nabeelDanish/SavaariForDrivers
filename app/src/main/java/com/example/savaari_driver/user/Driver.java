@@ -5,6 +5,7 @@ import com.google.android.gms.maps.model.LatLng;
 public class Driver {
     int userID;
     String name;
+    String email;
     LatLng currentLocation;
     String status;
 
@@ -59,5 +60,13 @@ public class Driver {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 }

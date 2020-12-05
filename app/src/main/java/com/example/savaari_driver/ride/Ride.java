@@ -14,7 +14,8 @@ public class Ride {
             DRIVER_ARRIVED = 12,
             CANCELLED = 13,
             STARTED = 14,
-            COMPLETED = 15;
+            NEAR_DROPFF = 15,
+            COMPLETED = 16;
 
     public static final int
             DEFAULT = 0,
@@ -33,6 +34,7 @@ public class Ride {
     private String pickupTitle;
     private LatLng dropoffLocation;
     private String dropoffTitle;
+    private double distance;
     private long startTime;
     private long endTime;
     private int rideType;
@@ -170,5 +172,13 @@ public class Ride {
 
     public void setStops(ArrayList<LatLng> stops) {
         this.stops = stops;
+    }
+
+    public double getDistance() {
+        return distance;
+    }
+
+    public void setDistance(double distance) {
+        this.distance = distance;
     }
 }

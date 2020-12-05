@@ -18,7 +18,7 @@ public class NetworkUtil
     // Main Attributes
     private static final NetworkUtil networkUtil = new NetworkUtil();
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://a31f00a879e7.ngrok.io/"; // remember to add a "/" at the end of the url
+    private static final String urlAddress = "https://cabf1349dc0e.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // Private Constructor
     private NetworkUtil()
@@ -309,6 +309,49 @@ public class NetworkUtil
         {
             e.printStackTrace();
             Log.d(TAG, "confirmRideRequest(): Exception thrown!");
+            return null;
+        }
+    }
+    // Marking Arrival
+    public static JSONObject markArrival(int rideID) {
+        JSONObject jsonObject = new JSONObject();
+        try
+        {
+            jsonObject.put("RIDE_ID", rideID);
+            Log.d(TAG, "markArrival(): " + jsonObject.toString());
+            return sendPost(urlAddress + "markArrival", jsonObject, true);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "markArrival(): Exception thrown!");
+            return null;
+        }
+    }
+
+    // Starting Ride
+    public static JSONObject startRide(int rideID) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", rideID);
+            Log.d(TAG, "startRide(): " + jsonObject.toString());
+            return sendPost(urlAddress + "startRideDriver", jsonObject, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "startRide(): Exception thrown!");
+            return null;
+        }
+    }
+
+    // Ending Ride
+    public static JSONObject endRide(int rideID) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", rideID);
+            Log.d(TAG, "endRide(): " + jsonObject.toString());
+            return sendPost(urlAddress + "endRideDriver", jsonObject, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "endRide(): Exception thrown!");
             return null;
         }
     }

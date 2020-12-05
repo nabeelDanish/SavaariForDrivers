@@ -12,11 +12,12 @@ public class SavaariApplication extends Application
     public ExecutorService executorService;
     public ScheduledThreadPoolExecutor scheduledThreadPoolExecutor;
     public com.example.savaari_driver.Repository repository;
+    private final int numThreads = 4;
 
     // Constructor: initializes thread pool to run in repository
     public SavaariApplication()
     {
-        executorService = Executors.newFixedThreadPool(4);
+        executorService = Executors.newFixedThreadPool(numThreads);
         repository = new com.example.savaari_driver.Repository(executorService);
         scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
         LocationUpdateUtil.setRepository(repository);

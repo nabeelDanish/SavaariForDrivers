@@ -60,4 +60,22 @@ public class Repository
     {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.confirmRideRequest(userID, found_status, riderID)));
     }
+
+    // Marking Arrival
+    public void markArrival(OnDataLoadedListener callback, int rideID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.markArrival(rideID)));
+    }
+
+    // Starting Ride
+    public void startRide(OnDataLoadedListener callback, int rideID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.startRide(rideID)));
+    }
+
+    // Ending Ride
+    public void endRide(OnDataLoadedListener callback, int rideID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.endRide(rideID)));
+    }
 }

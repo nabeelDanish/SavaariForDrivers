@@ -113,5 +113,4 @@
     <style name="ToolbarMenuIcon" parent="AppTheme">
         <item name="android:colorControlNormal">?attr/negativeTextColor</item>
     </style>
-
 </resources>
