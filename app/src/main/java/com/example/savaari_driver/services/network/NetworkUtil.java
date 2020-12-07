@@ -18,7 +18,7 @@ public class NetworkUtil
     // Main Attributes
     private static final NetworkUtil networkUtil = new NetworkUtil();
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://5b1679483563.ngrok.io/";
+    private static final String urlAddress = "https://4b15bd13dffb.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // Private Constructor
     private NetworkUtil()
@@ -87,6 +87,7 @@ public class NetworkUtil
     // Sending POST Requests
     public static JSONObject sendPost(String urlAddress, JSONObject jsonParam, boolean needResponse) throws JSONException {
 
+        Log.d(TAG, "sendPost: urlAddress = " + urlAddress);
         JSONObject result = new JSONObject();
         try
         {
@@ -261,14 +262,14 @@ public class NetworkUtil
         }
     }
     // Set Mark Active
-    public static Boolean setMarkActive(int userID, int active_status)
+    public static JSONObject setMarkActive(int userID, int active_status)
     {
         JSONObject jsonParam = new JSONObject();
         try
         {
             jsonParam.put("USER_ID", userID);
-            jsonParam.put("ACTIVE_STATUS", active_status);
-            return sendPost(urlAddress + "setMarkActive", jsonParam, true).getInt("STATUS_CODE") == 200;
+            jsonParam.put("ACTIVE_STATUS", active_status == 1);
+            return sendPost(urlAddress + "setMarkActive", jsonParam, true);
         }
         catch (Exception e)
         {
@@ -302,12 +303,74 @@ public class NetworkUtil
             jsonParam.put("USER_ID", userID);
             jsonParam.put("FOUND_STATUS", found_status);
             jsonParam.put("RIDER_ID", riderID);
+            Log.d(TAG, "confirmRideRequest(): " + jsonParam.toString());
             return sendPost(urlAddress + "confirmRideRequest", jsonParam, true);
         }
         catch (Exception e)
         {
             e.printStackTrace();
             Log.d(TAG, "confirmRideRequest(): Exception thrown!");
+            return null;
+        }
+    }
+    // Marking Arrival
+    public static JSONObject markArrival(int rideID) {
+        JSONObject jsonObject = new JSONObject();
+        try
+        {
+            jsonObject.put("RIDE_ID", rideID);
+            Log.d(TAG, "markArrival(): " + jsonObject.toString());
+            return sendPost(urlAddress + "markArrival", jsonObject, true);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "markArrival(): Exception thrown!");
+            return null;
+        }
+    }
+
+    // Starting Ride
+    public static JSONObject startRide(int rideID) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", rideID);
+            Log.d(TAG, "startRide(): " + jsonObject.toString());
+            return sendPost(urlAddress + "startRideDriver", jsonObject, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "startRide(): Exception thrown!");
+            return null;
+        }
+    }
+
+    // Ending Ride
+    public static JSONObject markDriverAtDestination(int rideID, double dist_travelled, int driverID) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", rideID);
+            jsonObject.put("DIST_TRAVELLED", dist_travelled);
+            jsonObject.put("DRIVER_ID", driverID);
+            Log.d(TAG, "endRide(): " + jsonObject.toString());
+            return sendPost(urlAddress + "markArrivalAtDestination", jsonObject, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "endRide(): Exception thrown!");
+            return null;
+        }
+    }
+
+    // Ending Ride with Payment
+    public static JSONObject endRideWithPayment(int rideID, double amountPaid, int driverID) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", rideID);
+            jsonObject.put("AMNT_PAID", amountPaid);
+            jsonObject.put("DRIVER_ID", driverID);
+            Log.d(TAG, "endRideWithPayment: " + jsonObject.toString());
+            return sendPost(urlAddress + "endRideWithPayment", jsonObject, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "endRideWithPayment: Exception thrown!");
             return null;
         }
     }

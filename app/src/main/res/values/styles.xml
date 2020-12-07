@@ -114,4 +114,9 @@
         <item name="android:colorControlNormal">?attr/negativeTextColor</item>
     </style>
 
+    <style name="bottomBar">
+        <item name="android:minWidth">56dp</item>
+        <item name="android:minHeight">56dp</item>
+        <item name="android:textAlignment">center</item>
+    </style>
 </resources>

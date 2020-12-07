@@ -13,9 +13,12 @@ import android.os.Build;
 import android.os.IBinder;
 import android.os.Looper;
 import android.util.Log;
+
 import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
+
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -47,6 +50,9 @@ public class LocationUpdateService extends Service {
                 try
                 {
                     LocationUpdateUtil.saveUserLocation(new LatLng(location.getLatitude(), location.getLongitude()), LocationUpdateService.this);
+                    Intent intent = new Intent("Update");
+                    intent.putExtra("Location", location);
+                    LocalBroadcastManager.getInstance(LocationUpdateService.this).sendBroadcast(intent);
                 } catch (Exception e)
                 {
                     e.printStackTrace();

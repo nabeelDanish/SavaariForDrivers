@@ -46,18 +46,42 @@ public class Repository
     public void setMarkActive(OnDataLoadedListener callback, int userID, int active_status)
     {
         executor.execute(() ->
-                NetworkUtil.setMarkActive(userID, active_status));
+                callback.onDataLoaded(NetworkUtil.setMarkActive(userID, active_status)));
     }
 
     // Check ride status
     public void checkRideStatus(OnDataLoadedListener callback, int userID)
     {
-        executor.execute(() -> NetworkUtil.checkRideStatus(userID));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.checkRideStatus(userID)));
     }
 
     // Confirm Ride Request
     public void confirmRideRequest(OnDataLoadedListener callback, int userID, int found_status, int riderID)
     {
-        executor.execute(() -> NetworkUtil.confirmRideRequest(userID, found_status, riderID));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.confirmRideRequest(userID, found_status, riderID)));
+    }
+
+    // Marking Arrival
+    public void markArrival(OnDataLoadedListener callback, int rideID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.markArrival(rideID)));
+    }
+
+    // Starting Ride
+    public void startRide(OnDataLoadedListener callback, int rideID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.startRide(rideID)));
+    }
+
+    // Marking Arrival at destination
+    public void markDriverAtDestination(OnDataLoadedListener callback, int rideID, double dist_travelled, int driverID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.markDriverAtDestination(rideID, dist_travelled, driverID)));
+    }
+
+    // Ending Ride with Payment
+    public void endRideWithPayment(OnDataLoadedListener callback, int rideID, double amntPaid, int driverID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.endRideWithPayment(rideID, amntPaid, driverID)));
     }
 }
