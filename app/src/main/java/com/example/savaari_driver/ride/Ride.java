@@ -14,8 +14,9 @@ public class Ride {
             DRIVER_ARRIVED = 12,
             CANCELLED = 13,
             STARTED = 14,
-            NEAR_DROPFF = 15,
-            COMPLETED = 16;
+            NEAR_DROPFF = 19,
+            TAKE_PAYMENT = 15,
+            COMPLETED = 20;
 
     public static final int
             DEFAULT = 0,
@@ -39,6 +40,7 @@ public class Ride {
     private long endTime;
     private int rideType;
     private double estimatedFare;
+    private double fare;
     private int rideStatus;
     private int matchStatus;
     private Object paymentMethod;
@@ -180,5 +182,12 @@ public class Ride {
 
     public void setDistance(double distance) {
         this.distance = distance;
+    }
+
+    public double getFare() {
+        return fare;
+    }
+    public void setFare(double fare) {
+        this.fare = fare;
     }
 }

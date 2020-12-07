@@ -87,6 +87,7 @@ public class RideViewModel extends ViewModel {
                         // Calculating distance to pickup location
                         driver.setCurrentLocation(new LatLng(latitude, longitude));
                         double distance = Util.distance(latitude, longitude, ride.getPickupLocation().latitude, ride.getPickupLocation().longitude);
+
                         if (distance <= 200) {
                             Log.d(LOG_TAG, "setUserCoordinates(): setting near pickup to true");
                             rideStatus.setValue(Ride.PICKUP);
@@ -161,8 +162,10 @@ public class RideViewModel extends ViewModel {
         if (!userLocationsLoaded.getValue())
             repository.getUserLocations(this::onUserLocationsLoaded);
     }
-    public void setMarkActive()
+    public void setMarkActive(int activeStatus)
     {
+        setACTIVE_STATUS(activeStatus);
+        markedActive.setValue(activeStatus == 1);
         repository.setMarkActive(object -> {
             try
             {
@@ -195,6 +198,7 @@ public class RideViewModel extends ViewModel {
 
     public void confirmRideRequest(int found_status)
     {
+        ride.setDriver(driver);
         repository.confirmRideRequest(object -> {
             getRideStatus();
         },driver.getUserID(), found_status, ride.getRider().getUserID());
@@ -238,24 +242,50 @@ public class RideViewModel extends ViewModel {
             }
         }, ride.getRideID());
     }
-    public void endRide()
+    public void markDriverAtDestination()
     {
         Log.d(LOG_TAG, "endRide() called!");
-        repository.endRide(object -> {
+        repository.markDriverAtDestination(object -> {
             try {
                 if (object != null) {
                     JSONObject jsonObject = (JSONObject) object;
                     Log.d(LOG_TAG, "endRide(): jsonObject = " + jsonObject.toString());
                     if (jsonObject.getInt("STATUS") == 200)
                     {
-                        rideStatus.postValue(Ride.COMPLETED);
+                        ride.setFare(jsonObject.getDouble("FARE"));
+                        rideStatus.postValue(Ride.TAKE_PAYMENT);
                     }
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, ride.getRideID());
+        }, ride.getRideID(), ride.getDistance(), driver.getUserID());
     }
+
+    public void endRideWithPayment(double amountPaid) {
+        Log.d(LOG_TAG, "endRideWithPayment() called!");
+        repository.endRideWithPayment(object -> {
+            try {
+                if (object != null) {
+                    JSONObject jsonObject = (JSONObject) object;
+                    Log.d(TAG, "endRideWithPayment: jsonObject = " + jsonObject.toString());
+                    if (jsonObject.getInt("STATUS") == 200) {
+                        rideStatus.postValue(Ride.COMPLETED);
+                        IS_TAKING_RIDE.postValue(0);
+                        rideStatus.postValue(Ride.DEFAULT);
+                    }
+                }
+                else {
+                    Log.d(TAG, "endRideWithPayment: object is null");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }, ride.getRideID(), amountPaid, driver.getUserID());
+    }
+    
+    // Function to Reset Flag Variables on Ride Completion
+
 
     // Function on User Data Loaded
     public void onUserDataLoaded(Object r) {
@@ -331,9 +361,13 @@ public class RideViewModel extends ViewModel {
             double sourceLong = jsonObject.getDouble("SOURCE_LONG");
             double destLat = jsonObject.getDouble("DEST_LAT");
             double destLong = jsonObject.getDouble("DEST_LONG");
+            ride.setFare(jsonObject.getDouble("FARE"));
 
             ride.setPickupLocation(new LatLng(sourceLat, sourceLong), "");
             ride.setDropoffLocation(new LatLng(destLat, destLong), "");
+
+            IS_TAKING_RIDE.postValue(jsonObject.getBoolean("IS_TAKING_RIDE")? 1 : 0);
+            rideStatus.postValue(jsonObject.getInt("RIDE_STATUS"));
         }
         catch (Exception e)
         {
@@ -373,5 +407,8 @@ public class RideViewModel extends ViewModel {
     public void setRideStatus(int rideStatus)
     {
         this.rideStatus.setValue(rideStatus);
+    }
+    public void setRideFound(boolean foundRide) {
+        this.rideFound.setValue(foundRide);
     }
 }

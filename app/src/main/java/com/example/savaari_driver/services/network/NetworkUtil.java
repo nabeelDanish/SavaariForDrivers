@@ -18,7 +18,7 @@ public class NetworkUtil
     // Main Attributes
     private static final NetworkUtil networkUtil = new NetworkUtil();
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://cabf1349dc0e.ngrok.io/"; // remember to add a "/" at the end of the url
+    private static final String urlAddress = "https://4b15bd13dffb.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // Private Constructor
     private NetworkUtil()
@@ -87,6 +87,7 @@ public class NetworkUtil
     // Sending POST Requests
     public static JSONObject sendPost(String urlAddress, JSONObject jsonParam, boolean needResponse) throws JSONException {
 
+        Log.d(TAG, "sendPost: urlAddress = " + urlAddress);
         JSONObject result = new JSONObject();
         try
         {
@@ -343,15 +344,33 @@ public class NetworkUtil
     }
 
     // Ending Ride
-    public static JSONObject endRide(int rideID) {
+    public static JSONObject markDriverAtDestination(int rideID, double dist_travelled, int driverID) {
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("RIDE_ID", rideID);
+            jsonObject.put("DIST_TRAVELLED", dist_travelled);
+            jsonObject.put("DRIVER_ID", driverID);
             Log.d(TAG, "endRide(): " + jsonObject.toString());
-            return sendPost(urlAddress + "endRideDriver", jsonObject, true);
+            return sendPost(urlAddress + "markArrivalAtDestination", jsonObject, true);
         } catch (Exception e) {
             e.printStackTrace();
             Log.d(TAG, "endRide(): Exception thrown!");
+            return null;
+        }
+    }
+
+    // Ending Ride with Payment
+    public static JSONObject endRideWithPayment(int rideID, double amountPaid, int driverID) {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", rideID);
+            jsonObject.put("AMNT_PAID", amountPaid);
+            jsonObject.put("DRIVER_ID", driverID);
+            Log.d(TAG, "endRideWithPayment: " + jsonObject.toString());
+            return sendPost(urlAddress + "endRideWithPayment", jsonObject, true);
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "endRideWithPayment: Exception thrown!");
             return null;
         }
     }

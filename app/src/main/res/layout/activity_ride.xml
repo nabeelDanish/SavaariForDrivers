@@ -44,12 +44,13 @@
             android:id="@+id/user_location"
             android:layout_width="50dp"
             android:layout_height="50dp"
-            android:layout_centerVertical="true"
+            android:layout_alignParentEnd="true"
+            android:layout_alignBottom="@+id/layout"
+            android:layout_marginBottom="130dp"
             android:layout_marginEnd="20dp"
             android:background="@drawable/menu_btn"
             android:backgroundTint="?attr/backgroundColor"
             android:baselineAlignBottom="false"
-            android:layout_alignParentEnd="true"
             android:elevation="10dp"
             android:maxWidth="50dp"
             android:maxHeight="50dp"
@@ -58,20 +59,39 @@
             android:src="@drawable/ic_gps"
             android:tint="?attr/textColor" />
 
+        <LinearLayout
+            android:id="@+id/layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_alignParentBottom="true">
         <Button
             android:id="@+id/go_btn"
             android:layout_width="fill_parent"
             android:layout_height="50dp"
-            android:layout_alignParentBottom="true"
-            android:layout_centerHorizontal="true"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="10dp"
             android:background="@drawable/go_btn"
             android:elevation="30dp"
+            android:hapticFeedbackEnabled="true"
             android:outlineProvider="background"
             android:text="@string/active"
             android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/bottomAppBar2"
+            style="@style/bottomBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="0dp"
+            android:text="@string/driver_status"
+            android:textSize="18sp"
+            android:textAlignment="center"
+            android:background="?attr/foregroundColor"
+            android:textColor="?attr/textColor" />
+        </LinearLayout>
     </RelativeLayout>
 
     <com.google.android.material.navigation.NavigationView

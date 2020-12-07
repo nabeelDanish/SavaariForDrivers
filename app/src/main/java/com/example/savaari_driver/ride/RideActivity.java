@@ -16,11 +16,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.text.InputType;
 import android.util.Log;
 import android.view.HapticFeedbackConstants;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -71,9 +73,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class RideActivity extends Util implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener,
-        GoogleMap.OnPolylineClickListener, GoogleMap.OnInfoWindowClickListener {
-
+public class RideActivity
+        extends Util
+        implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener,
+        GoogleMap.OnPolylineClickListener, GoogleMap.OnInfoWindowClickListener
+{
     // ---------------------------------------------------------------------------------------------
     //                                    MAIN ATTRIBUTES
     // ---------------------------------------------------------------------------------------------
@@ -109,6 +113,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     private View headerView;
     private TextView navUsername, navEmail;
     private Button searchRideButton;
+    private TextView rideStatusBar;
 
     // Broadcast Receiver Function
     BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver()
@@ -157,14 +162,22 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
             Toast.makeText(RideActivity.this, "Sorry. We can not authenticate you", Toast.LENGTH_LONG).show();
         }
         else {
+            // UI Elements
             centerGPSButton = findViewById(R.id.user_location);
             centerGPSButton.setEnabled(true);
+            rideStatusBar = findViewById(R.id.bottomAppBar2);
+
+            // Getting View Model
             rideViewModel = new ViewModelProvider(this, new RideViewModelFactory(USER_ID,
                     ((SavaariApplication) this.getApplication()).getRepository())
             ).get(RideViewModel.class);
 
             // Checking services and getting permissions
             getLocationPermission();
+
+            // -------------------------------------------------------------------------------------
+            //                              MATCHMAKING OBSERVERS
+            // -------------------------------------------------------------------------------------
 
             // Creating the Observer for Ride Taking
             rideViewModel.getIsTakingRide().observe(RideActivity.this, integer ->
@@ -198,7 +211,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                     case Ride.DRIVER_ARRIVED:
                     {
                         // Do Something
-                        Toast.makeText(RideActivity.this, "Waiting for Rider", Toast.LENGTH_SHORT).show();
+                        rideStatusBar.setText("Waiting for Rider");
                         searchRideButton.setVisibility(View.VISIBLE);
                         searchRideButton.setText(R.string.start_ride);
                         searchRideButton.setEnabled(true);
@@ -206,7 +219,7 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                     }
                     case Ride.STARTED:
                     {
-                        Toast.makeText(RideActivity.this, "Ride Started", Toast.LENGTH_SHORT).show();
+                        rideStatusBar.setText("Ride Started");
                         break;
                     }
                     case Ride.NEAR_DROPFF:
@@ -214,14 +227,41 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                         confirmEndRide();
                         break;
                     }
-                    case Ride.COMPLETED:
+                    case Ride.TAKE_PAYMENT:
                     {
-                        Toast.makeText(RideActivity.this, "Fare = " + (rideViewModel.getRide().getDistance() * 10), Toast.LENGTH_SHORT).show();
+                        String fare = String.valueOf((rideViewModel.getRide().getDistance() * 10));
+                        rideStatusBar.setText("Fare = " + fare);
+
+                        searchRideButton.setVisibility(View.VISIBLE);
+                        searchRideButton.setEnabled(true);
+                        searchRideButton.setText("TAKE PAYMENT");
                         break;
                     }
                 }
+            }); // End of Observer: Ride Status
+
+            // Observer for Ride found
+            rideViewModel.isRideFound().observe(this, aBoolean -> {
+                if (aBoolean)
+                {
+                    confirmRideRequest();
+                }
             });
-        }
+
+            // Start The Ride Matchmaking Service
+            rideViewModel.isMarkedActive().observe(this, aBoolean -> {
+                if (aBoolean)
+                {
+                    searchRideButton.setVisibility(View.GONE);
+                    rideStatusBar.setText("Your Online");
+                    rideStatusBar.setBackgroundColor(R.attr.deselectedForegroundColor);
+                }
+                else
+                {
+                    rideStatusBar.setText("Your Offline");
+                }
+            });
+        }// End of Else: Location Permission Granted
     }// End of OnCreate();
 
     // ---------------------------------------------------------------------------------------------
@@ -384,12 +424,12 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
         // Main Button to start Search Ride
         searchRideButton = findViewById(R.id.go_btn);
         searchRideButton.setEnabled(true);
-        searchRideButton.setOnClickListener(v -> {
+        searchRideButton.setOnClickListener(v ->
+        {
             v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
 
-            // Stop the Location Update Service
-            // LocationUpdateUtil.stopLocationService(RideActivity.this);
-            if (rideViewModel.getIsTakingRide().getValue() == 1 && rideViewModel.RideStatus().getValue() == Ride.DRIVER_ARRIVED)
+            // Main Switch case for initiating tasks
+            if (rideViewModel.getIsTakingRide().getValue() == 1)
             {
                 switch(rideViewModel.RideStatus().getValue()) {
                     case Ride.DRIVER_ARRIVED: {
@@ -397,57 +437,56 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
                         break;
                     }
                     case Ride.NEAR_DROPFF: {
-                        rideViewModel.endRide();
+                        rideViewModel.markDriverAtDestination();
+                        break;
+                    }
+                    case Ride.PICKUP: {
+                        rideViewModel.markArrival();
+                        break;
+                    }
+                    case Ride.TAKE_PAYMENT: {
+                        takePayment();
                         break;
                     }
                 }
             }
+            else if(rideViewModel.isMarkedActive().getValue())
+                rideViewModel.setMarkActive(0);
             else
-                startMatchMaking();
+                rideViewModel.setMarkActive(1);
         });
         centerGPSButton.setOnClickListener(v -> getDeviceLocation()); //moveCamera to user location
+    }
+
+    private void takePayment() {
+
+        final String[] m_Text = {""};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Ride Completed");
+        builder.setMessage("Please Take Payment of " + rideViewModel.getRide().getFare() + " RS");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            m_Text[0] = input.getText().toString();
+            rideViewModel.endRideWithPayment(Double.parseDouble(m_Text[0]));
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
     }
 
     // --------------------------------------------------------------------------------------------
     //                                     MATCH MAKING FUNCTIONS
     // --------------------------------------------------------------------------------------------
-
-    private void checkRideStatus()
-    {
-        rideViewModel.isRideFound().observe(this, aBoolean -> {
-            if (aBoolean)
-            {
-                Toast.makeText(RideActivity.this, "Ride Found", Toast.LENGTH_SHORT).show();
-                confirmRideRequest();
-            }
-            else
-            {
-                Toast.makeText(RideActivity.this, "Ride not Found!", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-    /* Main MatchMaking Function */
-    private void startMatchMaking()
-    {
-        // Start The Ride Matchmaking Service
-        rideViewModel.setACTIVE_STATUS(1);
-        rideViewModel.setMarkActive();
-        rideViewModel.isMarkedActive().observe(this, aBoolean -> {
-            if (aBoolean)
-            {
-                Toast.makeText(RideActivity.this, "Marked Active", Toast.LENGTH_SHORT).show();
-                searchRideButton.setVisibility(View.GONE);
-                checkRideStatus();
-            }
-            else
-            {
-                Toast.makeText(RideActivity.this, "Error!", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
     private void confirmRideRequest()
     {
+        rideViewModel.setRideFound(false);
+
         // Show Dialog
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setMessage("Confirm Ride Request\nUserName = " + rideViewModel.getRide().getRider().getUsername());
@@ -470,23 +509,11 @@ public class RideActivity extends Util implements OnMapReadyCallback, Navigation
     }
 
     private void confirmNearPickupLocation() {
-        // Show Dialog
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage("Near Pickup Location");
 
-        // Setting Buttons
-        alertDialogBuilder.setPositiveButton("Mark Arrival", (dialogInterface, i) ->
-        {
-            rideViewModel.markArrival();
-        });
-        alertDialogBuilder.setNegativeButton("Cancel", (dialogInterface, i) ->
-        {
-            rideViewModel.setRideStatus(Ride.DEFAULT);
-        });
-
-        // Showing the Dialog
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
+        searchRideButton.setVisibility(View.VISIBLE);
+        searchRideButton.setEnabled(true);
+        searchRideButton.setText("MARK ARRIVAL");
+        rideStatusBar.setText("Near Pickup");
     }
     private void startRide()
     {
