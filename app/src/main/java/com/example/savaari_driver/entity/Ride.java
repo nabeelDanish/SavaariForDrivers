@@ -1,14 +1,8 @@
-package com.example.savaari_driver.ride;
-
-import com.example.savaari_driver.ride.entity.Payment;
-import com.example.savaari_driver.ride.entity.Vehicle;
-import com.example.savaari_driver.user.Driver;
-import com.example.savaari_driver.user.Rider;
-import com.google.android.gms.maps.model.LatLng;
+package com.example.savaari_driver.entity;
 
 import java.util.ArrayList;
 
-public class Ride {
+public class Ride extends RideRequest {
     public static final int
             PICKUP = 11,
             DRIVER_ARRIVED = 12,
@@ -26,51 +20,36 @@ public class Ride {
             NOT_FOUND = 4,
             STATUS_ERROR = 5;
 
-    int rideID;
-    private Rider rider;
-    private Driver driver;
+    // -------------------------------------------------------------------------
+    //                              MAIN ATTRIBUTES
+    // -------------------------------------------------------------------------
+    private int rideID;
     private Vehicle vehicle;
     private Payment payment;
-    private LatLng pickupLocation;
-    private String pickupTitle;
-    private LatLng dropoffLocation;
-    private String dropoffTitle;
-    private double distance;
     private long startTime;
     private long endTime;
+    private double distanceTravelled;
     private int rideType;
     private double estimatedFare;
     private double fare;
     private int rideStatus;
-    private int matchStatus;
-    private Object paymentMethod;
-    private ArrayList<LatLng> stops;
+    private int findStatus;
+    private Integer paymentMethod;
+    private ArrayList<Location> stops;
 
-    Ride() {
+    // --------------------------------------------------------------------------
+    //                              MAIN METHODS
+    // --------------------------------------------------------------------------
+    public Ride() {
         rider = new Rider();
         driver = new Driver();
         payment = new Payment();
         pickupLocation = null;
         dropoffLocation = null;
         stops = new ArrayList<>();
-        matchStatus = DEFAULT;
+        findStatus = DEFAULT;
     }
-
-    public Rider getRider() {
-        return rider;
-    }
-
-    public void setRider(Rider rider) {
-        this.rider = rider;
-    }
-
-    public Driver getDriver() {
-        return driver;
-    }
-
-    public void setDriver(Driver driver) {
-        this.driver = driver;
-    }
+    // Getters and Setters
 
     public int getRideID() {
         return rideID;
@@ -96,22 +75,6 @@ public class Ride {
         this.payment = payment;
     }
 
-    public LatLng getPickupLocation() {
-        return pickupLocation;
-    }
-
-    public void setPickupLocation(LatLng pickupLocation, String pickupTitle) {
-        this.pickupLocation = pickupLocation;
-    }
-
-    public LatLng getDropoffLocation() {
-        return dropoffLocation;
-    }
-
-    public void setDropoffLocation(LatLng dropoffLocation, String dropoffTitle) {
-        this.dropoffLocation = dropoffLocation;
-    }
-
     public long getStartTime() {
         return startTime;
     }
@@ -126,6 +89,14 @@ public class Ride {
 
     public void setEndTime(long endTime) {
         this.endTime = endTime;
+    }
+
+    public double getDistanceTravelled() {
+        return distanceTravelled;
+    }
+
+    public void setDistanceTravelled(double distanceTravelled) {
+        this.distanceTravelled = distanceTravelled;
     }
 
     public int getRideType() {
@@ -144,6 +115,14 @@ public class Ride {
         this.estimatedFare = estimatedFare;
     }
 
+    public double getFare() {
+        return fare;
+    }
+
+    public void setFare(double fare) {
+        this.fare = fare;
+    }
+
     public int getRideStatus() {
         return rideStatus;
     }
@@ -152,42 +131,27 @@ public class Ride {
         this.rideStatus = rideStatus;
     }
 
-    public int getMatchStatus() {
-        return matchStatus;
+    public int getFindStatus() {
+        return findStatus;
     }
 
-    public void setMatchStatus(int matchStatus) {
-        this.matchStatus = matchStatus;
+    public void setFindStatus(int findStatus) {
+        this.findStatus = findStatus;
     }
 
-    public Object getPaymentMethod() {
+    public Integer getPaymentMethod() {
         return paymentMethod;
     }
 
-    public void setPaymentMethod(Object paymentMethod) {
+    public void setPaymentMethod(Integer paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
 
-    public ArrayList<LatLng> getStops() {
+    public ArrayList<Location> getStops() {
         return stops;
     }
 
-    public void setStops(ArrayList<LatLng> stops) {
+    public void setStops(ArrayList<Location> stops) {
         this.stops = stops;
-    }
-
-    public double getDistance() {
-        return distance;
-    }
-
-    public void setDistance(double distance) {
-        this.distance = distance;
-    }
-
-    public double getFare() {
-        return fare;
-    }
-    public void setFare(double fare) {
-        this.fare = fare;
     }
 }

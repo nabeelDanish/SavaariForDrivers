@@ -40,6 +40,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
+import com.example.savaari_driver.entity.Ride;
 import com.example.savaari_driver.services.location.LocationUpdateUtil;
 import com.example.savaari_driver.settings.SettingsActivity;
 import com.google.android.gms.common.ConnectionResult;
@@ -125,9 +126,10 @@ public class RideActivity
             Bundle bundle = intent.getExtras();
             Location location = (Location) bundle.get("Location");
             rideViewModel.setUserCoordinates(location.getLatitude(), location.getLongitude());
-            // moveCamera(new LatLng(location.getLatitude(), location.getLongitude()));
+            moveCamera(new LatLng(location.getLatitude(), location.getLongitude()));
+
             if (!rideViewModel.isLiveUserDataLoaded().getValue())
-                rideViewModel.loadUserData();
+                loadUserData();
         }
     };
     // ---------------------------------------------------------------------------------------------
@@ -176,6 +178,22 @@ public class RideActivity
             getLocationPermission();
 
             // -------------------------------------------------------------------------------------
+            //                                  DATA OBSERVERS
+            // -------------------------------------------------------------------------------------
+            rideViewModel.isLiveUserDataLoaded().observe(this, aBoolean -> {
+                if (aBoolean) {
+                    navUsername.setText(rideViewModel.getDriver().getUsername());
+                    navEmail.setText(rideViewModel.getDriver().getEmailAddress());
+                    Toast.makeText(RideActivity.this, "User data loaded!", Toast.LENGTH_SHORT).show();
+                    searchRideButton.setEnabled(true);
+                }
+                else
+                {
+                    Toast.makeText(RideActivity.this, "Data could not be loaded", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+            // -------------------------------------------------------------------------------------
             //                              MATCHMAKING OBSERVERS
             // -------------------------------------------------------------------------------------
 
@@ -186,13 +204,13 @@ public class RideActivity
                 {
                     // Create the Map Maker to Rider Location
                     MarkerOptions options = new MarkerOptions()
-                            .position(rideViewModel.getRide().getPickupLocation())
+                            .position(rideViewModel.getRide().getPickupLocation().toLatLng())
                             .title("Pickup");
                     pickupMarker = googleMap.addMarker(options);
 
-                    calculateDirections(rideViewModel.getDriver().getCurrentLocation(), pickupMarker, false);
+                    calculateDirections(rideViewModel.getDriver().getCurrentLocation().toLatLng(), pickupMarker, false);
 
-                    setDestination(rideViewModel.getRide().getDropoffLocation(), "Destination");
+                    setDestination(rideViewModel.getRide().getDropoffLocation().toLatLng(), "Destination");
 
                     // Disable the button
                     searchRideButton.setVisibility(View.INVISIBLE);
@@ -229,7 +247,7 @@ public class RideActivity
                     }
                     case Ride.TAKE_PAYMENT:
                     {
-                        String fare = String.valueOf((rideViewModel.getRide().getDistance() * 10));
+                        String fare = String.valueOf((rideViewModel.getRide().getDistanceTravelled() * 10));
                         rideStatusBar.setText("Fare = " + fare);
 
                         searchRideButton.setVisibility(View.VISIBLE);
@@ -255,6 +273,8 @@ public class RideActivity
                     searchRideButton.setVisibility(View.GONE);
                     rideStatusBar.setText("Your Online");
                     rideStatusBar.setBackgroundColor(R.attr.deselectedForegroundColor);
+
+                    rideViewModel.startMatchMaking();
                 }
                 else
                 {
@@ -385,7 +405,7 @@ public class RideActivity
                 .title(title);
         destinationMarker = googleMap.addMarker(options);
 
-        calculateDirections(rideViewModel.getRide().getPickupLocation(),
+        calculateDirections(rideViewModel.getRide().getPickupLocation().toLatLng(),
                 destinationMarker, true);
     }
     private void initializeNavigationBar() {
@@ -418,12 +438,12 @@ public class RideActivity
         initializeNavigationBar();
 
         // Loading Data from API
-        loadUserData();
-        loadUserLocations();
+        // loadUserData();
+        // loadUserLocations();
 
         // Main Button to start Search Ride
         searchRideButton = findViewById(R.id.go_btn);
-        searchRideButton.setEnabled(true);
+        searchRideButton.setEnabled(false);
         searchRideButton.setOnClickListener(v ->
         {
             v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
@@ -489,7 +509,7 @@ public class RideActivity
 
         // Show Dialog
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage("Confirm Ride Request\nUserName = " + rideViewModel.getRide().getRider().getUsername());
+        alertDialogBuilder.setMessage("Confirm Ride Request\nUserName = " + rideViewModel.getRideRequest().getRider().getUsername());
 
         // Setting Buttons
         alertDialogBuilder.setPositiveButton("Take Ride", (dialogInterface, i) ->
@@ -536,20 +556,6 @@ public class RideActivity
     /* Loads user data from database */
     private void loadUserData() {
         rideViewModel.loadUserData();
-
-        rideViewModel.isLiveUserDataLoaded().observe(this, aBoolean -> {
-
-            if (aBoolean) {
-                navUsername.setText(rideViewModel.getDriver().getName());
-                navEmail.setText(rideViewModel.getDriver().getEmail());
-                Toast.makeText(RideActivity.this, "User data loaded!", Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(RideActivity.this, "Data could not be loaded", Toast.LENGTH_SHORT).show();
-            }
-        });
-
     }
 
     /* Function for loading User Location Data */
@@ -558,7 +564,7 @@ public class RideActivity
         rideViewModel.isLiveUserLocationsLoaded().observe(this, aBoolean -> {
             if (aBoolean)
             {
-                ArrayList<LatLng> mUserLocations = rideViewModel.getUserLocations();
+                ArrayList<com.example.savaari_driver.entity.Location> mUserLocations = rideViewModel.getUserLocations();
                 Log.d(TAG, "loadUserLocations: Started!");
 
                 // Testing Code
@@ -566,7 +572,7 @@ public class RideActivity
                 for (int i = 0; i < mUserLocations.size(); ++i) {
                     Log.d(TAG, "loadUserLocations: setting Markers");
                     MarkerOptions option = new MarkerOptions()
-                            .position(mUserLocations.get(i));
+                            .position(mUserLocations.get(i).toLatLng());
                     googleMap.addMarker(option);
                 }
                 Toast.makeText(RideActivity.this, "User locations loaded!", Toast.LENGTH_SHORT).show();
@@ -629,11 +635,11 @@ public class RideActivity
                         {
                             moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()));
                             rideViewModel.setUserCoordinates(currentLocation.getLatitude(), currentLocation.getLongitude());
-                            LocationUpdateUtil.saveUserLocation(rideViewModel.getDriver().getCurrentLocation(), RideActivity.this);
+                            LocationUpdateUtil.saveUserLocation(rideViewModel.getDriver().getCurrentLocation().toLatLng(), RideActivity.this);
 
                             // Calling Load User Data
-                            loadUserData();
-                            loadUserLocations();
+                            // loadUserData();
+                            // loadUserLocations();
 
                             // Starting Background Location Service
                             ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);

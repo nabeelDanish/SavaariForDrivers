@@ -103,6 +103,6 @@ public class Util extends AppCompatActivity
 
         int meterConversion = 1609;
 
-        return (double) (distance * meterConversion);
+        return distance * meterConversion;
     }
 }

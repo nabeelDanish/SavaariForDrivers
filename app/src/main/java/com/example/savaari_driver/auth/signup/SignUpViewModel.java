@@ -30,8 +30,13 @@ public class SignUpViewModel extends ViewModel
         repository.signup(object -> {
             boolean result;
             try {
-                result = (boolean) object;
-                signUpComplete.postValue(result);
+                if (object != null) {
+                    result = (boolean) object;
+                    signUpComplete.postValue(result);
+                }
+                else {
+                    signUpComplete.postValue(false);
+                }
             }
             catch (Exception e) {
                 e.printStackTrace();

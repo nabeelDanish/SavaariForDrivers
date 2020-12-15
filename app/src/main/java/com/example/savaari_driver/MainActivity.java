@@ -48,8 +48,10 @@ public class MainActivity extends Util
                 startActivity(i);
                 finish();
             }, 1200);
-        }
-        else {
+        } else {
+
+
+            // Delayed Handler for Starting Ride Activity
             new Handler().postDelayed(() -> {
 
                 Intent i = new Intent(MainActivity.this, RideActivity.class);

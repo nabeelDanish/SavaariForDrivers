@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:background="?attr/backgroundColor"
     android:elevation="0dp"
-    tools:context=".SignUpActivity">
+    tools:context=".auth.signup.SignUpActivity">
 
     <EditText
         android:id="@+id/nickname"
@@ -86,7 +86,6 @@
         android:elevation="12dp"
         android:enabled="false"
         android:text="@string/action_sign_up"
-        android:textAlignment="center"
         android:textAppearance="@style/TextAppearance.AppCompat.Display4"
         android:textColor="?attr/negativeTextColor"
         android:textSize="18sp"
@@ -148,11 +147,11 @@
             android:elevation="0dp"
             android:foregroundTint="?attr/backgroundColor"
             android:src="@drawable/ic_checked"
-            android:tint="?attr/backgroundColor"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:srcCompat="@drawable/ic_checked" />
+            app:srcCompat="@drawable/ic_checked"
+            app:tint="?attr/backgroundColor" />
 
         <TextView
             android:id="@+id/textView2"

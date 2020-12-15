@@ -85,7 +85,20 @@ public class LocationUpdateUtil
             {
                 Log.d(TAG, "saveUserLocation: Executing sendLocationFunction");
 
-                LocationUpdateUtil.repository.sendLastLocation(currentUserID, mUserLocation.latitude, mUserLocation.longitude);
+                LocationUpdateUtil.repository.sendLastLocation(object -> {
+                    try {
+                        if (object != null) {
+                            int status = (int) object;
+                            if (status == 1) {
+                                Log.d(TAG, "saveUserLocation: location saved successfully!");
+                            } else {
+                                Log.d(TAG, "saveUserLocation: location could not be saved!");
+                            }
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                } ,currentUserID, mUserLocation.latitude, mUserLocation.longitude);
             }
         }
     }
