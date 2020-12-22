@@ -14,7 +14,7 @@ public class LoginViewModel extends ViewModel {
 
     // Main Attributes
     private final String LOG_TAG = this.getClass().getCanonicalName();
-    private final MutableLiveData<Integer> userID = new MutableLiveData<>(-1);
+    private final MutableLiveData<Integer> userID = new MutableLiveData<>();
     private MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
     private MutableLiveData<RecoveryFormState> recoveryFormState = new MutableLiveData<>();
     private Repository repository;

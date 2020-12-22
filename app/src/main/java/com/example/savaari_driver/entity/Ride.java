@@ -34,7 +34,6 @@ public class Ride extends RideRequest {
     private double fare;
     private int rideStatus;
     private int findStatus;
-    private Integer paymentMethod;
     private ArrayList<Location> stops;
 
     // --------------------------------------------------------------------------
@@ -49,108 +48,77 @@ public class Ride extends RideRequest {
         stops = new ArrayList<>();
         findStatus = DEFAULT;
     }
-    // Getters and Setters
 
+    // Getters and Setters
     public int getRideID() {
         return rideID;
     }
-
     public void setRideID(int rideID) {
         this.rideID = rideID;
     }
-
     public Vehicle getVehicle() {
         return vehicle;
     }
-
     public void setVehicle(Vehicle vehicle) {
         this.vehicle = vehicle;
     }
-
     public Payment getPayment() {
         return payment;
     }
-
     public void setPayment(Payment payment) {
         this.payment = payment;
     }
-
     public long getStartTime() {
         return startTime;
     }
-
     public void setStartTime(long startTime) {
         this.startTime = startTime;
     }
-
     public long getEndTime() {
         return endTime;
     }
-
     public void setEndTime(long endTime) {
         this.endTime = endTime;
     }
-
     public double getDistanceTravelled() {
         return distanceTravelled;
     }
-
     public void setDistanceTravelled(double distanceTravelled) {
         this.distanceTravelled = distanceTravelled;
     }
-
     public int getRideType() {
         return rideType;
     }
-
     public void setRideType(int rideType) {
         this.rideType = rideType;
     }
-
     public double getEstimatedFare() {
         return estimatedFare;
     }
-
     public void setEstimatedFare(double estimatedFare) {
         this.estimatedFare = estimatedFare;
     }
-
     public double getFare() {
         return fare;
     }
-
     public void setFare(double fare) {
         this.fare = fare;
     }
-
     public int getRideStatus() {
         return rideStatus;
     }
-
     public void setRideStatus(int rideStatus) {
         this.rideStatus = rideStatus;
     }
-
     public int getFindStatus() {
         return findStatus;
     }
-
     public void setFindStatus(int findStatus) {
         this.findStatus = findStatus;
     }
-
-    public Integer getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(Integer paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
     public ArrayList<Location> getStops() {
         return stops;
     }
-
     public void setStops(ArrayList<Location> stops) {
         this.stops = stops;
     }

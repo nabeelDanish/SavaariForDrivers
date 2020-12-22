@@ -40,7 +40,7 @@ public class LocationUpdateService extends Service {
         @Override
         public void onLocationResult(LocationResult locationResult)
         {
-            Log.d(LOG_TAG, "onLocationResult: got Location result");
+            Log.v(LOG_TAG, "onLocationResult: got Location result");
             Location location = locationResult.getLastLocation();
 
             // Saving the Location Data on database
@@ -107,7 +107,7 @@ public class LocationUpdateService extends Service {
     // Overriding the onStartCommand for this Service so that it uses Location Code
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(LOG_TAG, "onStartCommand: called.");
+        Log.v(LOG_TAG, "onStartCommand: called.");
         getLocation();
         return START_NOT_STICKY;
     }
@@ -115,7 +115,7 @@ public class LocationUpdateService extends Service {
     // Member function for setting location data
     private void getLocation()
     {
-        Log.d(LOG_TAG, "getLocation: Inside function!");
+        Log.v(LOG_TAG, "getLocation: Inside function!");
 
         // Quit the looper if the user is signed out
         if (mUserID == -1)
@@ -133,13 +133,13 @@ public class LocationUpdateService extends Service {
         if (ActivityCompat.checkSelfPermission(this,
                 Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
         {
-            Log.d(LOG_TAG, "getLocation: stopping the location service.");
+            Log.v(LOG_TAG, "getLocation: stopping the location service.");
             stopSelf();
             return;
         }
 
         // Getting the Location Information and calling the SaveUserLocation Function
-        Log.d(LOG_TAG, "getLocation: getting Location information.");
+        Log.v(LOG_TAG, "getLocation: getting Location information.");
         mFusedLocationClient.requestLocationUpdates(mLocationRequestHighAccuracy,
                 locationCallback, Looper.myLooper()); // Added a Looper at the End to repeat the function
     }
@@ -148,7 +148,7 @@ public class LocationUpdateService extends Service {
     public void onDestroy()
     {
         super.onDestroy();
-        Log.d(LOG_TAG, "onDestroy: Service Destroyed!");
+        Log.v(LOG_TAG, "onDestroy: Service Destroyed!");
         mFusedLocationClient.removeLocationUpdates(locationCallback);
         stopSelf();
     }

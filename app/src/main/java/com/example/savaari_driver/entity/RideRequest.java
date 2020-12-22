@@ -2,6 +2,28 @@ package com.example.savaari_driver.entity;
 
 public class RideRequest {
 
+    // Flags
+    // Match status - used in business logic
+    public static final int
+            MS_DEFAULT = 0,
+            MS_REQ_RECEIVED = 1,
+            MS_REQ_ACCEPTED = 2;
+
+    // Match status - used in business logic
+    public static final int
+            NOT_SENT = -1,
+            NO_CHANGE = 0,
+            REJECTED = 1,
+            FOUND = 2;
+
+    // Match return status  - returned to clients
+    public static final int
+            DEFAULT = 50,
+            PAIRED = 51,
+            ALREADY_PAIRED = 52,
+            NOT_PAIRED = 53,
+            NOT_FOUND = 54,
+            STATUS_ERROR = 55;
     // ----------------------------------------------------------------
     //                         MAIN ATTRIBUTES
     // ----------------------------------------------------------------
@@ -12,6 +34,7 @@ public class RideRequest {
     protected Location dropoffLocation;
     private String dropoffTitle;
     protected int findStatus;
+    protected Integer paymentMethod;
 
     // ----------------------------------------------------------------
     //                          MAIN METHODS
@@ -64,5 +87,11 @@ public class RideRequest {
     }
     public void setFindStatus(int findStatus) {
         this.findStatus = findStatus;
+    }
+    public Integer getPaymentMethod() {
+        return paymentMethod;
+    }
+    public void setPaymentMethod(Integer paymentMethod) {
+        this.paymentMethod = paymentMethod;
     }
 }

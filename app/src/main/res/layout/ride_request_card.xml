@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <LinearLayout
+        android:id="@+id/ride_detail_sub_panel"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:layout_gravity="center"
+        android:background="@drawable/ride_detail_card"
+        android:clickable="true"
+        android:focusable="true"
+        android:orientation="horizontal"
+        android:shadowColor="?attr/textColor"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="85dp"
+            android:layout_height="85dp"
+            android:layout_gravity="center"
+            app:cardBackgroundColor="?attr/foregroundColor"
+            app:cardCornerRadius="70dp">
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:layout_gravity="center"
+                android:background="?attr/deselectedForegroundColor"
+                app:cardCornerRadius="40dp">
+
+                <ImageView
+                    android:id="@+id/rider_img"
+                    android:layout_width="80dp"
+                    android:layout_height="80dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_account_box" />
+
+            </androidx.cardview.widget.CardView>
+
+        </androidx.cardview.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <TextView
+                android:id="@+id/rider_name"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:paddingStart="5dp"
+                android:paddingTop="25dp"
+                android:paddingEnd="5dp"
+                android:text="Nabeel Danish"
+                android:textAlignment="viewStart"
+                android:textAllCaps="true"
+                android:textColor="?attr/textColor"
+                android:textSize="22sp" />
+
+            <RatingBar
+                android:id="@+id/rider_rating"
+                style="@android:attr/ratingBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:indeterminateTint="@color/success_green"
+                android:isIndicator="true"
+                android:max="5"
+                android:numStars="5"
+                android:progressTint="@color/success_green"
+                android:scaleX=".5"
+                android:scaleY=".5"
+                android:transformPivotX="0dp"
+                android:transformPivotY="0dp" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

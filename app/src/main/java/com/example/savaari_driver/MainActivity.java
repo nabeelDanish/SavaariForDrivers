@@ -3,20 +3,25 @@ package com.example.savaari_driver;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
+import android.preference.PreferenceManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.Toast;
+
 import com.example.savaari_driver.auth.login.LoginActivity;
 import com.example.savaari_driver.ride.RideActivity;
 
-// TODO Create a Login Check from SharedPreferences
 
-public class MainActivity extends Util
-{
+public class MainActivity extends Util {
 
-    // Main onCreate Function
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
-        // Setting Themes
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        ThemeVar.setData(preferences.getInt(getString(R.string.preference_theme_var), ThemeVar.getData()));
+
         switch (ThemeVar.getData())
         {
             case(0):
@@ -30,38 +35,47 @@ public class MainActivity extends Util
                 break;
         }
 
-        // Setting Layout
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Getting Stored USER_ID
+        // Expand logo animation
+//        ImageView logo = findViewById(R.drawable.ic_savaari_logo);
+//        Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.zoom);
+//        logo.startAnimation(animation);
+
         SharedPreferences sh
                 = getSharedPreferences("AuthSharedPref",
                 MODE_PRIVATE);
 
         final int USER_ID = sh.getInt("USER_ID", -1);
         if (USER_ID == -1) {
-            new Handler().postDelayed(() -> {
-
-                Intent i = new Intent(MainActivity.this, LoginActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                startActivity(i);
-                finish();
-            }, 1200);
-        } else {
-
-
-            // Delayed Handler for Starting Ride Activity
-            new Handler().postDelayed(() -> {
-
-                Intent i = new Intent(MainActivity.this, RideActivity.class);
-                i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                i.putExtra("USER_ID", USER_ID);
-                startActivity(i);
-                finish();
-            }, 1200);
+            launchLoginActivity();
         }
+        else {
+            ((SavaariApplication) getApplication()).getRepository().persistConnection(object -> {
+                if (object == null || !((Boolean) object)) {
+                    Toast.makeText(this, "No network connection", Toast.LENGTH_SHORT).show();
+                }
 
-        //TODO: Firebase theme logic implementation in MainActivity
-    }// End of: onCreate()
+                launchRideActivity(USER_ID);
+            }, USER_ID);
+        }
+    }
+
+    public void launchLoginActivity() {
+        Intent i = new Intent(MainActivity.this, LoginActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(i);
+        finish();
+    }
+
+    public void launchRideActivity(int userID) {
+        Intent i = new Intent(MainActivity.this, RideActivity.class);
+        i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        i.putExtra("USER_ID", userID);
+        startActivity(i);
+        finish();
+    }
 }
+
+//

@@ -1,5 +1,6 @@
 package com.example.savaari_driver;
 
+import com.example.savaari_driver.entity.*;
 import com.example.savaari_driver.services.network.NetworkUtil;
 import com.example.savaari_driver.services.network.OnDataLoadedListener;
 import java.util.concurrent.Executor;
@@ -25,6 +26,14 @@ public class Repository
     // Login
     public void login(OnDataLoadedListener callback, String username, String password) {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().login(username, password)));
+    }
+    // Persist Connection
+    public void persistConnection(OnDataLoadedListener callback, int userID) {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().persistConnection(userID)));
+    }
+    // Logout
+    public void logout(OnDataLoadedListener callback, int userID) {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().logout(userID)));
     }
     // Loading User Data
     public void loadUserData(OnDataLoadedListener callback, int currentUserID) {
@@ -52,6 +61,11 @@ public class Repository
     // Check Ride Request Status
     public void checkRideRequestStatus(OnDataLoadedListener callback, int userID) {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().checkRideRequestStatus(userID)));
+    }
+
+    // Start Matchmaking Service
+    public void startMatchmaking(OnDataLoadedListener callback, int userID) {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().startMatchmaking(userID)));
     }
 
     // Check ride status
@@ -85,8 +99,8 @@ public class Repository
     }
 
     // Ending Ride with Payment
-    public void endRideWithPayment(OnDataLoadedListener callback, int rideID, double amntPaid, int driverID)
+    public void endRideWithPayment(OnDataLoadedListener callback, int rideID, Payment payment, int driverID)
     {
-        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().endRideWithPayment(rideID, amntPaid, driverID)));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().endRideWithPayment(rideID, payment, driverID)));
     }
 }

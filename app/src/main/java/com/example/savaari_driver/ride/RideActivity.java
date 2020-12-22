@@ -1,5 +1,6 @@
 package com.example.savaari_driver.ride;
 
+// Imports
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -25,6 +26,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ProgressBar;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +44,7 @@ import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
+import com.example.savaari_driver.entity.Driver;
 import com.example.savaari_driver.entity.Ride;
 import com.example.savaari_driver.services.location.LocationUpdateUtil;
 import com.example.savaari_driver.settings.SettingsActivity;
@@ -74,10 +79,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+// Main Class
 public class RideActivity
         extends Util
-        implements OnMapReadyCallback, NavigationView.OnNavigationItemSelectedListener,
-        GoogleMap.OnPolylineClickListener, GoogleMap.OnInfoWindowClickListener
+        implements OnMapReadyCallback,
+        NavigationView.OnNavigationItemSelectedListener,
+        GoogleMap.OnPolylineClickListener,
+        GoogleMap.OnInfoWindowClickListener
 {
     // ---------------------------------------------------------------------------------------------
     //                                    MAIN ATTRIBUTES
@@ -85,6 +93,7 @@ public class RideActivity
 
     // View Model
     private RideViewModel rideViewModel = null;
+    private com.example.savaari_driver.entity.Location driverLocation;
 
     // Util Variables
     private final String TAG = RideActivity.this.getClass().getCanonicalName();
@@ -113,8 +122,12 @@ public class RideActivity
     private NavigationView navigationView;
     private View headerView;
     private TextView navUsername, navEmail;
-    private Button searchRideButton;
+    private Button matchmakingControllerBtn;
     private TextView rideStatusBar;
+    private ProgressBar progressBar;
+    private LinearLayout rideDetailsPanel;
+    private TextView riderNameView;
+    private RatingBar riderRatingBar;
 
     // Broadcast Receiver Function
     BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver()
@@ -122,12 +135,13 @@ public class RideActivity
         @Override
         public void onReceive(Context context, Intent intent)
         {
-            Log.d(TAG, "onReceive(): 10 seconds passed!");
+            // Log.d(TAG, "onReceive(): 10 seconds passed!");
             Bundle bundle = intent.getExtras();
             Location location = (Location) bundle.get("Location");
-            rideViewModel.setUserCoordinates(location.getLatitude(), location.getLongitude());
             moveCamera(new LatLng(location.getLatitude(), location.getLongitude()));
 
+            // Saving User Location and check if user data loaded
+            rideViewModel.setUserCoordinates(location.getLatitude(), location.getLongitude());
             if (!rideViewModel.isLiveUserDataLoaded().getValue())
                 loadUserData();
         }
@@ -136,7 +150,9 @@ public class RideActivity
     //                                    Main Methods
     // ---------------------------------------------------------------------------------------------
 
+    // --------------------------------------------------------
     // Main onCreate Function to override
+    // --------------------------------------------------------
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -168,6 +184,11 @@ public class RideActivity
             centerGPSButton = findViewById(R.id.user_location);
             centerGPSButton.setEnabled(true);
             rideStatusBar = findViewById(R.id.bottomAppBar2);
+            progressBar = findViewById(R.id.progressBar);
+            progressBar.setVisibility(View.VISIBLE);
+            rideDetailsPanel = findViewById(R.id.ride_detail_sub_panel);
+            riderNameView = findViewById(R.id.rider_name);
+            riderRatingBar = findViewById(R.id.rider_rating);
 
             // Getting View Model
             rideViewModel = new ViewModelProvider(this, new RideViewModelFactory(USER_ID,
@@ -185,7 +206,12 @@ public class RideActivity
                     navUsername.setText(rideViewModel.getDriver().getUsername());
                     navEmail.setText(rideViewModel.getDriver().getEmailAddress());
                     Toast.makeText(RideActivity.this, "User data loaded!", Toast.LENGTH_SHORT).show();
-                    searchRideButton.setEnabled(true);
+
+                    matchmakingControllerBtn.setEnabled(true);
+                    progressBar.setVisibility(View.INVISIBLE);
+
+                    // Calling a check if the Ride was found already
+                    rideViewModel.checkRideRequestStatus();
                 }
                 else
                 {
@@ -200,25 +226,39 @@ public class RideActivity
             // Creating the Observer for Ride Taking
             rideViewModel.getIsTakingRide().observe(RideActivity.this, integer ->
             {
+                progressBar.setVisibility(View.INVISIBLE);
                 if (integer == 1)
                 {
+                    matchmakingControllerBtn.setVisibility(View.GONE);
+
                     // Create the Map Maker to Rider Location
                     MarkerOptions options = new MarkerOptions()
                             .position(rideViewModel.getRide().getPickupLocation().toLatLng())
                             .title("Pickup");
                     pickupMarker = googleMap.addMarker(options);
 
-                    calculateDirections(rideViewModel.getDriver().getCurrentLocation().toLatLng(), pickupMarker, false);
+                    // Debugging Part Starts
+                    Driver temp = rideViewModel.getDriver();
+                    if (temp == null) {
+                        Log.w(TAG, "onCreate: Driver is NULL!");
+                    }
+                    com.example.savaari_driver.entity.Location tempLocation = temp.getCurrentLocation();
+                    if (tempLocation == null) {
+                        Log.w(TAG, "onCreate: Location is NULL!");
+                    }
+                    // Debugging Ends
 
+                    calculateDirections(driverLocation.toLatLng(), pickupMarker, false);
                     setDestination(rideViewModel.getRide().getDropoffLocation().toLatLng(), "Destination");
 
                     // Disable the button
-                    searchRideButton.setVisibility(View.INVISIBLE);
+                    matchmakingControllerBtn.setVisibility(View.INVISIBLE);
                 }
             });
 
             // Creating the Observer for On-going Ride Status
             rideViewModel.RideStatus().observe(RideActivity.this, integer -> {
+                progressBar.setVisibility(View.INVISIBLE);
                 switch (integer)
                 {
                     case Ride.PICKUP:
@@ -230,9 +270,9 @@ public class RideActivity
                     {
                         // Do Something
                         rideStatusBar.setText("Waiting for Rider");
-                        searchRideButton.setVisibility(View.VISIBLE);
-                        searchRideButton.setText(R.string.start_ride);
-                        searchRideButton.setEnabled(true);
+                        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+                        matchmakingControllerBtn.setText(R.string.start_ride);
+                        matchmakingControllerBtn.setEnabled(true);
                         break;
                     }
                     case Ride.STARTED:
@@ -250,9 +290,9 @@ public class RideActivity
                         String fare = String.valueOf((rideViewModel.getRide().getDistanceTravelled() * 10));
                         rideStatusBar.setText("Fare = " + fare);
 
-                        searchRideButton.setVisibility(View.VISIBLE);
-                        searchRideButton.setEnabled(true);
-                        searchRideButton.setText("TAKE PAYMENT");
+                        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+                        matchmakingControllerBtn.setEnabled(true);
+                        matchmakingControllerBtn.setText("TAKE PAYMENT");
                         break;
                     }
                 }
@@ -262,27 +302,231 @@ public class RideActivity
             rideViewModel.isRideFound().observe(this, aBoolean -> {
                 if (aBoolean)
                 {
+                    progressBar.setVisibility(View.INVISIBLE);
                     confirmRideRequest();
                 }
             });
 
             // Start The Ride Matchmaking Service
             rideViewModel.isMarkedActive().observe(this, aBoolean -> {
+                progressBar.setVisibility(View.INVISIBLE);
                 if (aBoolean)
                 {
-                    searchRideButton.setVisibility(View.GONE);
-                    rideStatusBar.setText("Your Online");
-                    rideStatusBar.setBackgroundColor(R.attr.deselectedForegroundColor);
+                    if (rideViewModel.getACTIVE_STATUS() == 1)
+                    {
+                        // Setting UI Elements
+                        matchmakingControllerBtn.setText("DEACTIVE");
+                        rideStatusBar.setText("Your Online");
+                        removeMarkersPolyline();
 
-                    rideViewModel.startMatchMaking();
+                        // Starting Matchmaking
+                        rideViewModel.startMatchMaking();
+                    } else {
+                        matchmakingControllerBtn.setText("ACTIVE");
+                        rideStatusBar.setText("Your Offline");
+                    }
                 }
-                else
-                {
+                else {
+                    if (matchmakingControllerBtn != null)
+                        matchmakingControllerBtn.setText("ACTIVE");
                     rideStatusBar.setText("Your Offline");
                 }
             });
         }// End of Else: Location Permission Granted
-    }// End of OnCreate();
+
+    }// ------------------------ End of OnCreate() -------------------------------;
+
+    /*
+     * Initializes View Objects including:
+     * centerGPSButton
+     * autocompleteFragment
+     * Main Button
+     */
+    private void init() {
+        Log.d(TAG, "init: initializing");
+
+        // Initializing UI
+        initializeNavigationBar();
+
+        // moveCamera to user location
+        centerGPSButton.setOnClickListener(v -> getDeviceLocation());
+
+        // Main Button to start Search Ride
+        matchmakingControllerBtn = findViewById(R.id.go_btn);
+        matchmakingControllerBtn.setEnabled(false);
+
+        // ---------------------------------
+        //     MAIN BUTTON Listener
+        // ---------------------------------
+        matchmakingControllerBtn.setOnClickListener(v ->
+        {
+            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+            progressBar.setVisibility(View.VISIBLE);
+
+            // Main Switch case for initiating tasks
+            if (rideViewModel.getIsTakingRide().getValue() == 1)
+            {
+                switch(rideViewModel.RideStatus().getValue()) {
+                    case Ride.DRIVER_ARRIVED: {
+                        startRide();
+                        break;
+                    }
+                    case Ride.NEAR_DROPFF: {
+                        rideViewModel.markDriverAtDestination();
+                        break;
+                    }
+                    case Ride.PICKUP: {
+                        rideViewModel.markArrival();
+                        break;
+                    }
+                    case Ride.TAKE_PAYMENT: {
+                        takePayment();
+                        break;
+                    }
+                }
+            }
+            else if (rideViewModel.isRideFound().getValue()) {
+                progressBar.setVisibility(View.VISIBLE);
+                rideViewModel.confirmRideRequest(0);
+            }
+            else if(rideViewModel.getACTIVE_STATUS() == 1) {
+                rideViewModel.setMarkActive(0);
+            }
+            else {
+                rideViewModel.setMarkActive(1);
+            }
+        });
+    }
+
+    // --------------------------------------------------------------------------------------------
+    //                                     MATCH MAKING FUNCTIONS
+    // --------------------------------------------------------------------------------------------
+    private void confirmRideRequest()
+    {
+        // Setting UI Elements
+        rideDetailsPanel.setVisibility(View.VISIBLE);
+        riderNameView.setText(rideViewModel.getRideRequest().getRider().getUsername());
+        riderRatingBar.setRating(rideViewModel.getRideRequest().getRider().getRating());
+
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setText("CANCEL");
+
+        // Setting Button Action
+        rideDetailsPanel.setOnClickListener(view -> {
+            rideDetailsPanel.setVisibility(View.INVISIBLE);
+            // Handle Confirm Ride Request
+            progressBar.setVisibility(View.VISIBLE);
+            rideViewModel.confirmRideRequest(1);
+            rideViewModel.setRideFound(false);
+        });
+    }
+
+    private void confirmNearPickupLocation() {
+
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText("MARK ARRIVAL");
+        rideStatusBar.setText("Near Pickup");
+    }
+    private void startRide()
+    {
+        rideViewModel.startRide();
+        matchmakingControllerBtn.setVisibility(View.INVISIBLE);
+        matchmakingControllerBtn.setEnabled(false);
+        getDeviceLocation();
+    }
+
+    private void confirmEndRide()
+    {
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText(R.string.confirmRideEnd);
+    }
+
+    private void takePayment() {
+
+        final String[] m_Text = {""};
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Ride Completed");
+        builder.setMessage("Please Take Payment of " + rideViewModel.getRide().getFare() + " RS");
+
+        // Set up the input
+        final EditText input = new EditText(this);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        builder.setView(input);
+
+        // Set up the buttons
+        builder.setPositiveButton("OK", (dialog, which) -> {
+            m_Text[0] = input.getText().toString();
+            rideViewModel.endRideWithPayment(Double.parseDouble(m_Text[0]));
+        });
+        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    /* Loads user data from database */
+    private void loadUserData() {
+        rideViewModel.loadUserData();
+    }
+
+    /* Function for loading User Location Data */
+    private void loadUserLocations()
+    {
+        rideViewModel.isLiveUserLocationsLoaded().observe(this, aBoolean -> {
+            if (aBoolean)
+            {
+                ArrayList<com.example.savaari_driver.entity.Location> mUserLocations = rideViewModel.getUserLocations();
+                Log.d(TAG, "loadUserLocations: Started!");
+
+                // Testing Code
+                Log.d(TAG, "loadUserLocations: mUserLocations.size(): " + mUserLocations.size());
+                for (int i = 0; i < mUserLocations.size(); ++i) {
+                    Log.d(TAG, "loadUserLocations: setting Markers");
+                    MarkerOptions option = new MarkerOptions()
+                            .position(mUserLocations.get(i).toLatLng());
+                    googleMap.addMarker(option);
+                }
+                Toast.makeText(RideActivity.this, "User locations loaded!", Toast.LENGTH_SHORT).show();
+            }
+            else
+            {
+                Toast.makeText(RideActivity.this, "User locations could not be loaded", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+    // End of Function: loadUserLocations()
+
+
+    /*
+     * Receives autocompleteFragment's result (callback)
+     * Gets Place Object using 'getPlaceFromIntent()'
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == 1) {
+
+            if (resultCode == AutocompleteActivity.RESULT_OK) {
+                assert data != null;
+                Place place = Autocomplete.getPlaceFromIntent(data);
+//                String title = ((place.getName() == null) ?
+//                        ((place.getAddress() == null) ? "" : place.getAddress()) : place.getName());
+
+                Log.i(TAG, "Place: " + place.getName() + ", " + place.getId() + ", lat: " + Objects.requireNonNull(place.getLatLng()).latitude
+                        + ", lon: " + place.getLatLng().longitude);
+                moveCamera(Objects.requireNonNull(place.getLatLng()));
+            }
+            else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
+                // TODO: Handle the error.
+                assert data != null;
+                Status status = Autocomplete.getStatusFromIntent(data);
+                assert status.getStatusMessage() != null;
+                Log.i(TAG, Objects.requireNonNull(status.getStatusMessage()));
+            }
+            // The user canceled the operation.
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+    }
 
     // ---------------------------------------------------------------------------------------------
     //                                    MAP FUNCTIONS
@@ -391,6 +635,17 @@ public class RideActivity
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, RideActivity.DEFAULT_ZOOM));
     }
 
+    private void removeMarkersPolyline() {
+        if (pickupMarker != null)
+            pickupMarker.remove();
+        if (destinationMarker != null)
+            destinationMarker.remove();
+        if (pickupPolyline != null)
+            pickupPolyline.remove();
+        if (destinationPolyline != null)
+            destinationPolyline.remove();
+    }
+
     /* Method for adding a destination */
     private void setDestination(LatLng latLng, String title)
     {
@@ -426,197 +681,6 @@ public class RideActivity
         });
     }
 
-    /*
-     * Initializes View Objects including:
-     * centerGPSButton
-     * autocompleteFragment
-     */
-    private void init() {
-        Log.d(TAG, "init: initializing");
-
-        // Initializing UI
-        initializeNavigationBar();
-
-        // Loading Data from API
-        // loadUserData();
-        // loadUserLocations();
-
-        // Main Button to start Search Ride
-        searchRideButton = findViewById(R.id.go_btn);
-        searchRideButton.setEnabled(false);
-        searchRideButton.setOnClickListener(v ->
-        {
-            v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
-
-            // Main Switch case for initiating tasks
-            if (rideViewModel.getIsTakingRide().getValue() == 1)
-            {
-                switch(rideViewModel.RideStatus().getValue()) {
-                    case Ride.DRIVER_ARRIVED: {
-                        startRide();
-                        break;
-                    }
-                    case Ride.NEAR_DROPFF: {
-                        rideViewModel.markDriverAtDestination();
-                        break;
-                    }
-                    case Ride.PICKUP: {
-                        rideViewModel.markArrival();
-                        break;
-                    }
-                    case Ride.TAKE_PAYMENT: {
-                        takePayment();
-                        break;
-                    }
-                }
-            }
-            else if(rideViewModel.isMarkedActive().getValue())
-                rideViewModel.setMarkActive(0);
-            else
-                rideViewModel.setMarkActive(1);
-        });
-        centerGPSButton.setOnClickListener(v -> getDeviceLocation()); //moveCamera to user location
-    }
-
-    private void takePayment() {
-
-        final String[] m_Text = {""};
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Ride Completed");
-        builder.setMessage("Please Take Payment of " + rideViewModel.getRide().getFare() + " RS");
-
-        // Set up the input
-        final EditText input = new EditText(this);
-        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-        builder.setView(input);
-
-        // Set up the buttons
-        builder.setPositiveButton("OK", (dialog, which) -> {
-            m_Text[0] = input.getText().toString();
-            rideViewModel.endRideWithPayment(Double.parseDouble(m_Text[0]));
-        });
-        builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
-
-    // --------------------------------------------------------------------------------------------
-    //                                     MATCH MAKING FUNCTIONS
-    // --------------------------------------------------------------------------------------------
-    private void confirmRideRequest()
-    {
-        rideViewModel.setRideFound(false);
-
-        // Show Dialog
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
-        alertDialogBuilder.setMessage("Confirm Ride Request\nUserName = " + rideViewModel.getRideRequest().getRider().getUsername());
-
-        // Setting Buttons
-        alertDialogBuilder.setPositiveButton("Take Ride", (dialogInterface, i) ->
-        {
-            // Handle Confirm Ride Request
-            rideViewModel.confirmRideRequest(1);
-        });
-        alertDialogBuilder.setNegativeButton("Cancel", (dialogInterface, i) ->
-        {
-            // Handle Reject Ride Request
-            rideViewModel.confirmRideRequest(0);
-        });
-
-        // Showing the Dialog
-        AlertDialog alertDialog = alertDialogBuilder.create();
-        alertDialog.show();
-    }
-
-    private void confirmNearPickupLocation() {
-
-        searchRideButton.setVisibility(View.VISIBLE);
-        searchRideButton.setEnabled(true);
-        searchRideButton.setText("MARK ARRIVAL");
-        rideStatusBar.setText("Near Pickup");
-    }
-    private void startRide()
-    {
-        rideViewModel.startRide();
-        searchRideButton.setVisibility(View.INVISIBLE);
-        searchRideButton.setEnabled(false);
-        getDeviceLocation();
-    }
-
-    private void confirmEndRide()
-    {
-        searchRideButton.setVisibility(View.VISIBLE);
-        searchRideButton.setEnabled(true);
-        searchRideButton.setText(R.string.confirmRideEnd);
-    }
-
-    // Observe Is Taking Ride
-    // --------------------------------------------------------------------------------------------
-
-    /* Loads user data from database */
-    private void loadUserData() {
-        rideViewModel.loadUserData();
-    }
-
-    /* Function for loading User Location Data */
-    private void loadUserLocations()
-    {
-        rideViewModel.isLiveUserLocationsLoaded().observe(this, aBoolean -> {
-            if (aBoolean)
-            {
-                ArrayList<com.example.savaari_driver.entity.Location> mUserLocations = rideViewModel.getUserLocations();
-                Log.d(TAG, "loadUserLocations: Started!");
-
-                // Testing Code
-                Log.d(TAG, "loadUserLocations: mUserLocations.size(): " + mUserLocations.size());
-                for (int i = 0; i < mUserLocations.size(); ++i) {
-                    Log.d(TAG, "loadUserLocations: setting Markers");
-                    MarkerOptions option = new MarkerOptions()
-                            .position(mUserLocations.get(i).toLatLng());
-                    googleMap.addMarker(option);
-                }
-                Toast.makeText(RideActivity.this, "User locations loaded!", Toast.LENGTH_SHORT).show();
-            }
-            else
-            {
-                Toast.makeText(RideActivity.this, "User locations could not be loaded", Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-    // End of Function: loadUserLocations()
-
-
-    /*
-     * Receives autocompleteFragment's result (callback)
-     * Gets Place Object using 'getPlaceFromIntent()'
-     */
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        if (requestCode == 1) {
-
-            if (resultCode == AutocompleteActivity.RESULT_OK) {
-                assert data != null;
-                Place place = Autocomplete.getPlaceFromIntent(data);
-//                String title = ((place.getName() == null) ?
-//                        ((place.getAddress() == null) ? "" : place.getAddress()) : place.getName());
-
-                Log.i(TAG, "Place: " + place.getName() + ", " + place.getId() + ", lat: " + Objects.requireNonNull(place.getLatLng()).latitude
-                        + ", lon: " + place.getLatLng().longitude);
-                moveCamera(Objects.requireNonNull(place.getLatLng()));
-            }
-            else if (resultCode == AutocompleteActivity.RESULT_ERROR) {
-                // TODO: Handle the error.
-                assert data != null;
-                Status status = Autocomplete.getStatusFromIntent(data);
-                assert status.getStatusMessage() != null;
-                Log.i(TAG, Objects.requireNonNull(status.getStatusMessage()));
-            }
-            // The user canceled the operation.
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
-
-
     /* Get's device location, calls moveCamera()*/
     private void getDeviceLocation() {
         Log.d("getDeviceLocation", "getting device location");
@@ -628,25 +692,25 @@ public class RideActivity
                 Task location = fusedLocationProviderClient.getLastLocation();
                 location.addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
+
+                        // Saving Location
                         Log.d(TAG, "onComplete: found location!");
                         Location currentLocation = (Location) task.getResult();
+                        driverLocation = new com.example.savaari_driver.entity.Location();
+                        driverLocation.setLatitude(currentLocation.getLatitude());
+                        driverLocation.setLongitude(currentLocation.getLongitude());
+
                         // Calling User Location Save Function
-                        try
-                        {
+                        try {
                             moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()));
                             rideViewModel.setUserCoordinates(currentLocation.getLatitude(), currentLocation.getLongitude());
                             LocationUpdateUtil.saveUserLocation(rideViewModel.getDriver().getCurrentLocation().toLatLng(), RideActivity.this);
-
-                            // Calling Load User Data
-                            // loadUserData();
-                            // loadUserLocations();
 
                             // Starting Background Location Service
                             ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
                             LocationUpdateUtil.startLocationService(manager, RideActivity.this);
 
-                        } catch (Exception e)
-                        {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
 
@@ -774,7 +838,7 @@ public class RideActivity
                 pickupMarker.showInfoWindow();
             }
             zoomRoute(newDecodedPath);
-            searchRideButton.setEnabled(true);
+            matchmakingControllerBtn.setEnabled(true);
             //}
         });
     }

@@ -36,11 +36,11 @@ public class LocationUpdateUtil
         {
             if ("com.example.savaari_driver.services.location.LocationUpdateService".equals(service.service.getClassName()))
             {
-                Log.d(TAG, "isLocationServiceRunning: location service is running");
+                Log.v(TAG, "isLocationServiceRunning: location service is running");
                 return true;
             }
         }
-        Log.d(TAG, "isLocationServiceRunning: location service is not running.");
+        Log.v(TAG, "isLocationServiceRunning: location service is not running.");
         return false;
     }
 
@@ -64,23 +64,23 @@ public class LocationUpdateUtil
     public static void stopLocationService(Context context)
     {
         context.stopService(new Intent(context, LocationUpdateService.class));
-        Log.d(TAG, "stopLocationService: service stopped");
+        Log.v(TAG, "stopLocationService: service stopped");
     }
 
     // Method for Saving User Location
     // Call this function after getting the USER's Locations
     public static void saveUserLocation(LatLng mUserLocation, Context context)
     {
-        Log.d(TAG, "saveUserLocation: inside!");
+        Log.v(TAG, "saveUserLocation: inside!");
         if (repository == null) {
-            Log.d(LOG_TAG, "saveUserLocation: REPOSITORY is null!");
+            Log.v(LOG_TAG, "saveUserLocation: REPOSITORY is null!");
         }
         if (mUserLocation != null)
         {
             // Function for Networking POST
             SharedPreferences sh = context.getSharedPreferences("AuthSharedPref", Context.MODE_PRIVATE);
             int currentUserID = sh.getInt("USER_ID", -1);
-            Log.d(TAG, "saveUserLocation: currentUserID: " + currentUserID);
+            Log.v(TAG, "saveUserLocation: currentUserID: " + currentUserID);
             if (currentUserID != -1)
             {
                 Log.d(TAG, "saveUserLocation: Executing sendLocationFunction");
@@ -90,9 +90,9 @@ public class LocationUpdateUtil
                         if (object != null) {
                             int status = (int) object;
                             if (status == 1) {
-                                Log.d(TAG, "saveUserLocation: location saved successfully!");
+                                Log.v(TAG, "saveUserLocation: location saved successfully!");
                             } else {
-                                Log.d(TAG, "saveUserLocation: location could not be saved!");
+                                Log.v(TAG, "saveUserLocation: location could not be saved!");
                             }
                         }
                     } catch (Exception e) {

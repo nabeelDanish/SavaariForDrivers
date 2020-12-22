@@ -4,6 +4,9 @@ import com.google.android.gms.maps.model.LatLng;
 
 public class User
 {
+    // Flags
+    public static final int DEFAULT_ID = -1;
+
     // ----------------------------------------------------------------
     //                          Main Attributes
     // ----------------------------------------------------------------
