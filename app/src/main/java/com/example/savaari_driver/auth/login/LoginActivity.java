@@ -22,7 +22,10 @@ import androidx.lifecycle.ViewModelProviders;
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
+import com.example.savaari_driver.register.RegisterActivity;
 import com.example.savaari_driver.auth.signup.SignUpActivity;
+import com.example.savaari_driver.entity.Driver;
+import com.example.savaari_driver.entity.Vehicle;
 import com.example.savaari_driver.ride.RideActivity;
 
 public class LoginActivity extends Util
@@ -260,15 +263,35 @@ public class LoginActivity extends Util
             myEdit.putInt("USER_ID", USER_ID);
             myEdit.commit();
 
-            Intent i = new Intent(LoginActivity.this, RideActivity.class);
-            startActivity(i);
-            finish();
-        }
-    }
+            // Loading User Data and applying checks
+            loginViewModel.loadDriverData(USER_ID);
+            loginViewModel.getUserdataLoaded().observe(this, aBoolean ->
+            {
+                if (aBoolean != null)
+                {
+                    if (aBoolean)
+                    {
+                        // Check Driver's eligibility to move to RideActivity
+                        Intent i;
+                        Driver driver = loginViewModel.getDriver();
+                        if (driver.getStatus() == Driver.DV_REQ_APPROVED && driver.getActiveVehicleID() == Vehicle.VH_REQ_ACCEPTED)
+                        {
+                            i = new Intent(LoginActivity.this, RideActivity.class);
+                        } else {
+                            i = new Intent(LoginActivity.this, RegisterActivity.class);
+                        }
+                        startActivity(i);
+                        finish();
+                    } else {
+                        Toast.makeText(getApplicationContext(), "User Data could not be loaded!", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });// End of User Data Loaded Listener
+        } // End of Login Successful
+    }// End of LoginResponseAction
 
     // Method: Handles Login Request
     private void loginAction(final ProgressBar loadingProgressBar, final String username, final String password) {
-
         loadingProgressBar.setVisibility(View.VISIBLE);
         loginViewModel.loginAction(username, password);
     }

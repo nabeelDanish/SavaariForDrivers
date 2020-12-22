@@ -44,6 +44,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".register.RegisterActivity">
+
+        </activity>
 
         <service
             android:name="com.example.savaari_driver.services.location.LocationUpdateService"

@@ -66,7 +66,8 @@
             android:orientation="vertical"
             android:layout_alignParentBottom="true">
 
-        <include layout="@layout/ride_request_card"
+        <include
+            layout="@layout/ride_request_card"
             android:id="@+id/ride_request_card"
             android:visibility="visible"
             android:layout_marginStart="20dp"

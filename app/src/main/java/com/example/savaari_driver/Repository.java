@@ -9,6 +9,7 @@ public class Repository
 {
     // Main Attributes
     private final Executor executor;
+    private Driver driver;
 
     // Constructor
     Repository(Executor executor) {
@@ -102,5 +103,11 @@ public class Repository
     public void endRideWithPayment(OnDataLoadedListener callback, int rideID, Payment payment, int driverID)
     {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().endRideWithPayment(rideID, payment, driverID)));
+    }
+    public Driver getDriver() {
+        return driver;
+    }
+    public void setDriver(Driver driver) {
+        this.driver = driver;
     }
 }
