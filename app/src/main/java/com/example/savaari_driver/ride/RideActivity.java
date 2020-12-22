@@ -34,6 +34,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -166,6 +167,9 @@ public class RideActivity
 
         // Getting Stored Data
         Intent recvIntent = getIntent();
+        if (!recvIntent.getBooleanExtra("API_CONNECTION", true)) {
+            Toast.makeText(this, "No network connection", Toast.LENGTH_SHORT).show();
+        }
         int USER_ID = recvIntent.getIntExtra("USER_ID", -1);
 
         if (USER_ID == -1) {
@@ -186,9 +190,13 @@ public class RideActivity
             rideStatusBar = findViewById(R.id.bottomAppBar2);
             progressBar = findViewById(R.id.progressBar);
             progressBar.setVisibility(View.VISIBLE);
-            rideDetailsPanel = findViewById(R.id.ride_detail_sub_panel);
-            riderNameView = findViewById(R.id.rider_name);
-            riderRatingBar = findViewById(R.id.rider_rating);
+
+            ConstraintLayout rideRequestCard = findViewById(R.id.ride_request_card);
+            rideDetailsPanel = rideRequestCard.findViewById(R.id.ride_detail_sub_panel);
+            riderNameView = rideRequestCard.findViewById(R.id.rider_name);
+            riderRatingBar = rideRequestCard.findViewById(R.id.rider_rating);
+
+            rideDetailsPanel.setVisibility(View.INVISIBLE);
 
             // Getting View Model
             rideViewModel = new ViewModelProvider(this, new RideViewModelFactory(USER_ID,
@@ -287,8 +295,8 @@ public class RideActivity
                     }
                     case Ride.TAKE_PAYMENT:
                     {
-                        String fare = String.valueOf((rideViewModel.getRide().getDistanceTravelled() * 10));
-                        rideStatusBar.setText("Fare = " + fare);
+                        String distanceTravelled = String.valueOf((rideViewModel.getRide().getDistanceTravelled()) / 1000);
+                        rideStatusBar.setText("You Travelled " + distanceTravelled + "km");
 
                         matchmakingControllerBtn.setVisibility(View.VISIBLE);
                         matchmakingControllerBtn.setEnabled(true);
@@ -300,9 +308,9 @@ public class RideActivity
 
             // Observer for Ride found
             rideViewModel.isRideFound().observe(this, aBoolean -> {
+                progressBar.setVisibility(View.INVISIBLE);
                 if (aBoolean)
                 {
-                    progressBar.setVisibility(View.INVISIBLE);
                     confirmRideRequest();
                 }
             });
@@ -312,19 +320,7 @@ public class RideActivity
                 progressBar.setVisibility(View.INVISIBLE);
                 if (aBoolean)
                 {
-                    if (rideViewModel.getACTIVE_STATUS() == 1)
-                    {
-                        // Setting UI Elements
-                        matchmakingControllerBtn.setText("DEACTIVE");
-                        rideStatusBar.setText("Your Online");
-                        removeMarkersPolyline();
-
-                        // Starting Matchmaking
-                        rideViewModel.startMatchMaking();
-                    } else {
-                        matchmakingControllerBtn.setText("ACTIVE");
-                        rideStatusBar.setText("Your Offline");
-                    }
+                    driverActiveState();
                 }
                 else {
                     if (matchmakingControllerBtn != null)
@@ -386,10 +382,10 @@ public class RideActivity
                 }
             }
             else if (rideViewModel.isRideFound().getValue()) {
-                progressBar.setVisibility(View.VISIBLE);
+                rideDetailsPanel.setVisibility(View.INVISIBLE);
                 rideViewModel.confirmRideRequest(0);
             }
-            else if(rideViewModel.getACTIVE_STATUS() == 1) {
+            else if(rideViewModel.isMarkedActive().getValue()) {
                 rideViewModel.setMarkActive(0);
             }
             else {
@@ -401,6 +397,17 @@ public class RideActivity
     // --------------------------------------------------------------------------------------------
     //                                     MATCH MAKING FUNCTIONS
     // --------------------------------------------------------------------------------------------
+    private void driverActiveState() {
+        if (rideViewModel.isLiveUserDataLoaded().getValue()) {
+            rideDetailsPanel.setVisibility(View.INVISIBLE);
+            matchmakingControllerBtn.setVisibility(View.VISIBLE);
+            matchmakingControllerBtn.setText("DEACTIVE");
+            rideStatusBar.setText("Your Online");
+            removeMarkersPolyline();
+
+            rideViewModel.startMatchMaking();
+        }
+    }
     private void confirmRideRequest()
     {
         // Setting UI Elements
@@ -417,16 +424,19 @@ public class RideActivity
             // Handle Confirm Ride Request
             progressBar.setVisibility(View.VISIBLE);
             rideViewModel.confirmRideRequest(1);
-            rideViewModel.setRideFound(false);
         });
     }
 
     private void confirmNearPickupLocation() {
 
-        matchmakingControllerBtn.setVisibility(View.VISIBLE);
-        matchmakingControllerBtn.setEnabled(true);
-        matchmakingControllerBtn.setText("MARK ARRIVAL");
-        rideStatusBar.setText("Near Pickup");
+        rideViewModel.getNearPickup().observe(this, aBoolean -> {
+            if (aBoolean) {
+                matchmakingControllerBtn.setVisibility(View.VISIBLE);
+                matchmakingControllerBtn.setEnabled(true);
+                matchmakingControllerBtn.setText("MARK ARRIVAL");
+                rideStatusBar.setText("Near Pickup");
+            }
+        });
     }
     private void startRide()
     {
@@ -465,6 +475,8 @@ public class RideActivity
         builder.show();
     }
 
+
+    // --------------------------------------------------------------------------------------------
     /* Loads user data from database */
     private void loadUserData() {
         rideViewModel.loadUserData();
@@ -696,9 +708,11 @@ public class RideActivity
                         // Saving Location
                         Log.d(TAG, "onComplete: found location!");
                         Location currentLocation = (Location) task.getResult();
-                        driverLocation = new com.example.savaari_driver.entity.Location();
-                        driverLocation.setLatitude(currentLocation.getLatitude());
-                        driverLocation.setLongitude(currentLocation.getLongitude());
+                        if (currentLocation != null) {
+                            driverLocation = new com.example.savaari_driver.entity.Location();
+                            driverLocation.setLatitude(currentLocation.getLatitude());
+                            driverLocation.setLongitude(currentLocation.getLongitude());
+                        }
 
                         // Calling User Location Save Function
                         try {

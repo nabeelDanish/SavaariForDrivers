@@ -7,7 +7,6 @@ import android.preference.PreferenceManager;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import com.example.savaari_driver.auth.login.LoginActivity;
 import com.example.savaari_driver.ride.RideActivity;
@@ -39,7 +38,7 @@ public class MainActivity extends Util {
         setContentView(R.layout.activity_main);
 
         // Expand logo animation
-//        ImageView logo = findViewById(R.drawable.ic_savaari_logo);
+//        ImageView logo = findViewById(R.id.logo);
 //        Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.zoom);
 //        logo.startAnimation(animation);
 
@@ -52,14 +51,15 @@ public class MainActivity extends Util {
             launchLoginActivity();
         }
         else {
-            ((SavaariApplication) getApplication()).getRepository().persistConnection(object -> {
+            ((SavaariApplication) getApplication()).getRepository().persistLogin(object -> {
                 if (object == null || !((Boolean) object)) {
-                    Toast.makeText(this, "No network connection", Toast.LENGTH_SHORT).show();
+                    launchRideActivity(USER_ID, false);
                 }
 
-                launchRideActivity(USER_ID);
+                launchRideActivity(USER_ID, true);
             }, USER_ID);
         }
+
     }
 
     public void launchLoginActivity() {
@@ -69,10 +69,11 @@ public class MainActivity extends Util {
         finish();
     }
 
-    public void launchRideActivity(int userID) {
+    public void launchRideActivity(int userID, boolean apiConnection) {
         Intent i = new Intent(MainActivity.this, RideActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         i.putExtra("USER_ID", userID);
+        i.putExtra("API_CONNECTION", apiConnection);
         startActivity(i);
         finish();
     }

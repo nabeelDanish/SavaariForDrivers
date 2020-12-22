@@ -37,20 +37,19 @@ public class RideViewModel extends ViewModel {
     private ArrayList<Location> mUserLocations = new ArrayList<>();
     private Location currentLocation;
 
-    // Status
-    private int ACTIVE_STATUS = 0;
-
     // Data Repository
     private final Repository repository;
 
-    /* Data Loaded status flags */
+    /* Status Flags */
     private final MutableLiveData<Integer> IS_TAKING_RIDE = new MutableLiveData<Integer>(0);
     private final MutableLiveData<Boolean> userDataLoaded = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> userLocationsLoaded = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> markedActive = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> rideFound = new MutableLiveData<>(false);
     private final MutableLiveData<Integer> rideStatus = new MutableLiveData<>(Ride.DEFAULT);
+    private final MutableLiveData<Boolean> nearPickup = new MutableLiveData<>(false);
     private boolean locationLoaded = false;
+    private boolean matchmakingStarted = false;
 
     // ---------------------------------------------------------------------------------------------
     //                                      MAIN METHODS
@@ -81,12 +80,6 @@ public class RideViewModel extends ViewModel {
     public void setRide(Ride ride)
     {
         this.ride = ride;
-    }
-    public int getACTIVE_STATUS() {
-        return ACTIVE_STATUS;
-    }
-    public void setACTIVE_STATUS(int ACTIVE_STATUS) {
-        this.ACTIVE_STATUS = ACTIVE_STATUS;
     }
     public void setRideStatus(int rideStatus)
     {
@@ -122,12 +115,15 @@ public class RideViewModel extends ViewModel {
     {
         return IS_TAKING_RIDE;
     }
+    public LiveData<Boolean> getNearPickup() {
+        return nearPickup;
+    }
 
     // Setting LiveData flags
     public void setIsTakingRide(Integer IS_TAKING_RIDE) { this.IS_TAKING_RIDE.setValue(IS_TAKING_RIDE); }
 
     // ---------------------------------------------------------------------------------------------
-    //                                   MATCHMAKING AND OTHER
+    //                                   LOCATION, DATA, OTHER
     // ---------------------------------------------------------------------------------------------
 
     // Function to load user data
@@ -145,6 +141,7 @@ public class RideViewModel extends ViewModel {
             } else {
                 driver = (Driver) r;
                 driver.setCurrentLocation(currentLocation);
+                markedActive.postValue(driver.isActive());
                 Log.d("loadUserData(): ", driver.getUsername() + ", " + driver.getEmailAddress());
                 userDataLoaded.postValue(true);
             }
@@ -189,15 +186,15 @@ public class RideViewModel extends ViewModel {
             {
                 switch (rideStatus.getValue())
                 {
-                    case Ride.DEFAULT:
+                    case Ride.PICKUP:
                     {
                         // Calculating distance to pickup location
                         driver.getCurrentLocation().setLatLng(new LatLng(latitude, longitude));
                         double distance = Util.distance(latitude, longitude, ride.getPickupLocation().getLatitude(), ride.getPickupLocation().getLongitude());
-
+                        Log.d(TAG, "setUserCoordinates: distance to pickup = " + distance);
                         if (distance <= 100) {
                             Log.d(LOG_TAG, "setUserCoordinates(): setting near pickup to true");
-                            rideStatus.setValue(Ride.PICKUP);
+                            nearPickup.setValue(true);
                         }
                         break;
                     }
@@ -236,6 +233,9 @@ public class RideViewModel extends ViewModel {
         }
     }
 
+    // ---------------------------------------------------------------------------------------------
+    //                                   MATCHMAKING
+    // ---------------------------------------------------------------------------------------------
     // Function using the repository
     public void checkRideStatus()
     {
@@ -260,14 +260,19 @@ public class RideViewModel extends ViewModel {
     }
     public void setMarkActive(int activeStatus)
     {
-        setACTIVE_STATUS(activeStatus);
         repository.setMarkActive(object -> {
             try {
                 if (object != null) {
                     boolean aBoolean = (boolean) object;
                     if (aBoolean) {
-                        Log.d(LOG_TAG, "setMarkActive(): Marked Active!");
-                        markedActive.postValue(true);
+                        if (activeStatus == 1)
+                        {
+                            Log.d(LOG_TAG, "setMarkActive(): Marked Active!");
+                            markedActive.postValue(true);
+                        } else {
+                            Log.d(LOG_TAG, "setMarkActive(): Marked DeActive!");
+                            markedActive.postValue(false);
+                        }
                     } else {
                         Log.d(LOG_TAG, "setMarkActive(): Marked Active failed!");
                         markedActive.postValue(false);
@@ -278,7 +283,7 @@ public class RideViewModel extends ViewModel {
                 e.printStackTrace();
                 markedActive.postValue(false);
             }
-        }, driver.getUserID(), ACTIVE_STATUS);
+        }, driver.getUserID(), activeStatus);
     }
 
     public void checkRideRequestStatus()
@@ -303,21 +308,28 @@ public class RideViewModel extends ViewModel {
     }
 
     public void startMatchMaking() {
-        repository.startMatchmaking(object -> {
+        // Start Matchmaking
+        if (!matchmakingStarted)
+        {
+            Log.d(TAG, "startMatchMaking: Started!");
+            matchmakingStarted = true;
+            repository.startMatchmaking(object -> {
             try {
-                if (object != null) {
-                    rideRequest = (RideRequest) object;
-                    rideFound.postValue(true);
-                } else {
-                    Log.d(TAG, "startMatchMaking: found null");
+                    if (object != null) {
+                        rideRequest = (RideRequest) object;
+                        rideFound.postValue(true);
+                    } else {
+                        Log.d(TAG, "startMatchMaking: found null");
+                        rideFound.postValue(false);
+                    }
+                } catch (Exception e) {
+                    Log.d(TAG, "startMatchMaking: Exception thrown!");
+                    e.printStackTrace();
                     rideFound.postValue(false);
                 }
-            } catch (Exception e) {
-                Log.d(TAG, "startMatchMaking: Exception thrown!");
-                e.printStackTrace();
-                rideFound.postValue(false);
-            }
-        }, driver.getUserID());
+                matchmakingStarted = false;
+            }, driver.getUserID());
+        }
     }
     public void confirmRideRequest(int found_status)
     {
@@ -326,10 +338,13 @@ public class RideViewModel extends ViewModel {
             if (object != null) {
                 boolean aBoolean = (boolean) object;
                 if (aBoolean && found_status == 1) {
+                    rideFound.postValue(false);
                     checkRideStatus();
+                } else {
+                    rideFound.postValue(false);
                 }
             } else {
-                // do nothing
+                rideFound.postValue(false);
                 Log.d(TAG, "confirmRideRequest: object was null!");
             }
         },driver.getUserID(), found_status, rideRequest.getRider().getUserID());
@@ -417,10 +432,15 @@ public class RideViewModel extends ViewModel {
             }
         }, ride.getRideID(), ride.getPayment(), driver.getUserID());
     }
+
+    // ---------------------------------------------------------------------------------------------
+    //                                  UTILITY FUNCTIONS
+    // ---------------------------------------------------------------------------------------------
     public void resetFlags() {
         rideStatus.postValue(Ride.COMPLETED);
         IS_TAKING_RIDE.postValue(0);
         rideStatus.postValue(Ride.DEFAULT);
         markedActive.postValue(true);
+        nearPickup.postValue(false);
     }
 }

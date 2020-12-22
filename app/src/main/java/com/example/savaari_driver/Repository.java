@@ -28,7 +28,7 @@ public class Repository
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().login(username, password)));
     }
     // Persist Connection
-    public void persistConnection(OnDataLoadedListener callback, int userID) {
+    public void persistLogin(OnDataLoadedListener callback, int userID) {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().persistConnection(userID)));
     }
     // Logout
