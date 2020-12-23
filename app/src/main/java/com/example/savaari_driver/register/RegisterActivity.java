@@ -2,24 +2,31 @@ package com.example.savaari_driver.register;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.ViewModelProviders;
+
+import com.example.savaari_driver.MainActivity;
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
+import com.example.savaari_driver.auth.login.LoginActivity;
+import com.example.savaari_driver.entity.Vehicle;
 import com.example.savaari_driver.register.fragments.driver.DriverRegistrationFragment;
 import com.example.savaari_driver.register.fragments.RegistrationClickListener;
 import com.example.savaari_driver.register.fragments.vehicle.VehicleRegistrationFragment;
 import com.example.savaari_driver.entity.Driver;
+import com.example.savaari_driver.ride.RideActivity;
 
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 public class RegisterActivity extends Util implements RegistrationClickListener
 {
+    private final String LOG_TAG = this.getClass().getCanonicalName();
     // Main Attributes
     private RegisterViewModel registerViewModel;
     private ProgressBar loadingCircle;
@@ -30,10 +37,10 @@ public class RegisterActivity extends Util implements RegistrationClickListener
     // ------------------------------------------------------------------------------------------
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
+        themeSelect(this);
         super.onCreate(savedInstanceState);
 
         // Setting UI Elements
-        themeSelect(this);
         setContentView(R.layout.activity_register);
         // loadingCircle = findViewById(R.id.progressBar_2);
 
@@ -49,6 +56,11 @@ public class RegisterActivity extends Util implements RegistrationClickListener
                 ((SavaariApplication) this.getApplication()).getRepository())
         ).get(RegisterViewModel.class);
 
+        // Calling the Service again to Load Driver if not already
+        if (registerViewModel.getDriver() == null) {
+            future = ((SavaariApplication) getApplication()).scheduledThreadPoolExecutor.scheduleWithFixedDelay(() -> registerViewModel.loadUserData(USER_ID),
+                    0L, 8L, TimeUnit.SECONDS);
+        }
         // On Data Loaded
         registerViewModel.getUserdataLoaded().observe(this, aBoolean -> {
             if (aBoolean != null) {
@@ -59,13 +71,8 @@ public class RegisterActivity extends Util implements RegistrationClickListener
                         future.cancel(true);
                     }
                     checkDriverStatus();
-
                 } else {
                     Toast.makeText(this, "User Data could not be loaded!", Toast.LENGTH_SHORT).show();
-
-                    // Calling the Service again
-                    future = ((SavaariApplication) getApplication()).scheduledThreadPoolExecutor.scheduleWithFixedDelay(() -> registerViewModel.loadUserData(USER_ID),
-                            0L, 8L, TimeUnit.SECONDS);
                 }
             }
         });
@@ -95,23 +102,30 @@ public class RegisterActivity extends Util implements RegistrationClickListener
                         .commit();
                 break;
             }
-//            case Driver.DV_REQ_REJECTED:
-//            {
-//                // Request Rejected: handle later
-//                break;
-//            }
-//            case Driver.DV_REQ_APPROVED:
-//            {
-//                // Request Approved, check vehicles
-//
-//                break;
-//            }
+            case Driver.DV_REQ_REJECTED:
+            {
+                // Request Rejected: handle later
+                break;
+            }
+            case Driver.DV_REQ_APPROVED:
+            {
+                // Request Approved, check vehicles
+                if (registerViewModel.getDriver().getActiveVehicleID() != Vehicle.DEFAULT_ID) {
+                    // Goto Ride Activity
+                    launchRideActivity();
+                }
+                break;
+            }
         }
     }
 
-    private void addVehicle()
-    {
-
+    private void launchRideActivity() {
+        Log.d(LOG_TAG, "launchRideActivity: Launching Ride Activity");
+        Intent i = new Intent(RegisterActivity.this, RideActivity.class);
+        i.putExtra("API_CONNECTION", true);
+        i.putExtra("USER_ID", registerViewModel.getDriver().getUserID());
+        startActivity(i);
+        finish();
     }
 
     // Interface Implementation

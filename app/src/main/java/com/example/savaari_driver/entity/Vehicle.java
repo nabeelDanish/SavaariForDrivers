@@ -9,10 +9,12 @@ public class Vehicle
             VH_DEFAULT = 0,
             VH_REQ_SENT = 1,
             VH_REQ_REJECTED = 2,
-            VH_REQ_ACCEPTED = 3;
+            VH_REQ_ACCEPTED = 3, // Dirty record
+            VH_ACCEPTANCE_ACK = 4;
 
     // Main Attributes
     private int vehicleID;
+    private int vehicleTypeID;
     private String make;
     private String model;
     private String year;
@@ -100,5 +102,13 @@ public class Vehicle
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    public int getVehicleTypeID() {
+        return vehicleTypeID;
+    }
+
+    public void setVehicleTypeID(int vehicleTypeID) {
+        this.vehicleTypeID = vehicleTypeID;
     }
 }

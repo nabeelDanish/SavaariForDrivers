@@ -15,6 +15,7 @@ import com.example.savaari_driver.entity.Location;
 import com.example.savaari_driver.entity.Payment;
 import com.example.savaari_driver.entity.Ride;
 import com.example.savaari_driver.entity.RideRequest;
+import com.example.savaari_driver.entity.Vehicle;
 import com.google.android.gms.maps.model.LatLng;
 
 import java.util.ArrayList;
@@ -42,12 +43,13 @@ public class RideViewModel extends ViewModel {
 
     /* Status Flags */
     private final MutableLiveData<Integer> IS_TAKING_RIDE = new MutableLiveData<Integer>(0);
-    private final MutableLiveData<Boolean> userDataLoaded = new MutableLiveData<>(false);
+    private final MutableLiveData<Boolean> userDataLoaded = new MutableLiveData<>();
     private final MutableLiveData<Boolean> userLocationsLoaded = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> markedActive = new MutableLiveData<>(false);
     private final MutableLiveData<Boolean> rideFound = new MutableLiveData<>(false);
     private final MutableLiveData<Integer> rideStatus = new MutableLiveData<>(Ride.DEFAULT);
     private final MutableLiveData<Boolean> nearPickup = new MutableLiveData<>(false);
+    private final MutableLiveData<Integer> vehicleSelected = new MutableLiveData<>();
     private boolean locationLoaded = false;
     private boolean matchmakingStarted = false;
 
@@ -57,10 +59,18 @@ public class RideViewModel extends ViewModel {
     // Main Constructor
     public RideViewModel(int USER_ID, Repository repository)
     {
-        driver = new Driver();
         currentLocation = new Location();
-        this.driver.setUserID(USER_ID);
         this.repository = repository;
+        driver = new Driver();
+        driver.setUserID(USER_ID);
+//        driver = repository.getDriver();
+//        if (driver == null) {
+//            driver = new Driver();
+//            driver.setUserID(USER_ID);
+//            userDataLoaded.setValue(false);
+//        } else {
+//            userDataLoaded.setValue(true);
+//        }
     }
 
     // Getters and Setters
@@ -118,6 +128,9 @@ public class RideViewModel extends ViewModel {
     public LiveData<Boolean> getNearPickup() {
         return nearPickup;
     }
+    public LiveData<Integer> getVehicleSelected() {
+        return vehicleSelected;
+    }
 
     // Setting LiveData flags
     public void setIsTakingRide(Integer IS_TAKING_RIDE) { this.IS_TAKING_RIDE.setValue(IS_TAKING_RIDE); }
@@ -129,8 +142,7 @@ public class RideViewModel extends ViewModel {
     // Function to load user data
     public void loadUserData()
     {
-        if (!userDataLoaded.getValue())
-            repository.loadUserData(this::onUserDataLoaded, driver.getUserID());
+        repository.loadUserData(this::onUserDataLoaded, driver.getUserID());
     }
     // Function on User Data Loaded
     public void onUserDataLoaded(Object r) {
@@ -141,9 +153,10 @@ public class RideViewModel extends ViewModel {
             } else {
                 driver = (Driver) r;
                 driver.setCurrentLocation(currentLocation);
-                markedActive.postValue(driver.isActive());
                 Log.d("loadUserData(): ", driver.getUsername() + ", " + driver.getEmailAddress());
                 userDataLoaded.postValue(true);
+                repository.setDriver(driver);
+                markedActive.postValue(driver.isActive());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -233,6 +246,32 @@ public class RideViewModel extends ViewModel {
         }
     }
 
+    // Selecting a Vehicle
+    public void selectVehicle(int position)
+    {
+        // Getting the Vehicle
+        Vehicle vehicle = driver.getVehicles().get(position);
+        Log.d(TAG, "selectVehicle: called for Vehicle = " + vehicle.getModel());
+        repository.selectActiveVehicle(object -> {
+            try {
+                if (object != null) {
+                    boolean aBoolean = (boolean) object;
+                    if (aBoolean) {
+                        Log.d(TAG, "selectVehicle: Vehicle Selected!");
+                        vehicleSelected.postValue(vehicle.getVehicleID());
+                    } else {
+                        vehicleSelected.postValue(-1);
+                    }
+                } else {
+                    vehicleSelected.postValue(-1);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                vehicleSelected.postValue(-1);
+            }
+        }, driver.getUserID(), vehicle.getVehicleID());
+    }
+
     // ---------------------------------------------------------------------------------------------
     //                                   MATCHMAKING
     // ---------------------------------------------------------------------------------------------
@@ -271,17 +310,18 @@ public class RideViewModel extends ViewModel {
                             markedActive.postValue(true);
                         } else {
                             Log.d(LOG_TAG, "setMarkActive(): Marked DeActive!");
+                            vehicleSelected.postValue(-1);
                             markedActive.postValue(false);
                         }
                     } else {
                         Log.d(LOG_TAG, "setMarkActive(): Marked Active failed!");
-                        markedActive.postValue(false);
+                        // markedActive.postValue(false);
                     }
                 }
             } catch (Exception e) {
                 Log.d(LOG_TAG, "setMarkActive(): Error! Exception Thrown");
                 e.printStackTrace();
-                markedActive.postValue(false);
+                // markedActive.postValue(false);
             }
         }, driver.getUserID(), activeStatus);
     }

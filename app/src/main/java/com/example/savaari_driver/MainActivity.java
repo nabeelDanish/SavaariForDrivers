@@ -35,9 +35,9 @@ public class MainActivity extends Util {
         setContentView(R.layout.activity_main);
 
         // Expand logo animation
-//        ImageView logo = findViewById(R.id.logo);
-//        Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.zoom);
-//        logo.startAnimation(animation);
+        // ImageView logo = findViewById(R.id.logo);
+        // Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.zoom);
+        // logo.startAnimation(animation);
 
         SharedPreferences sh
                 = getSharedPreferences("AuthSharedPref",
@@ -56,7 +56,6 @@ public class MainActivity extends Util {
                 launchRegisterActivity(USER_ID, true);
             }, USER_ID);
         }
-
     }
 
     public void launchLoginActivity() {
@@ -75,5 +74,3 @@ public class MainActivity extends Util {
         finish();
     }
 }
-
-//

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/card_layout"
+    android:id="@+id/vehicleCard"
     android:layout_width="match_parent"
     android:layout_height="80dp"
     android:layout_marginStart="8dp"
@@ -11,7 +11,6 @@
     app:cardElevation="0dp"
     app:cardMaxElevation="0dp"
     app:contentPaddingLeft="8dp">
-
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -24,7 +23,7 @@
         android:paddingBottom="4dp">
 
         <ImageView
-            android:id="@+id/icon"
+            android:id="@+id/vehicleIcon"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:adjustViewBounds="false"
@@ -34,7 +33,7 @@
             android:scaleType="center"
             android:scaleX="1"
             android:scaleY="1"
-            app:srcCompat="@drawable/ic_account"
+            app:srcCompat="@drawable/ic_car"
             app:tint="?attr/textColor" />
 
         <LinearLayout
@@ -44,7 +43,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/textPrimary"
+                android:id="@+id/vehicle_textPrimary"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="5"
@@ -55,7 +54,7 @@
                 android:textSize="16sp" />
 
             <TextView
-                android:id="@+id/textSecondary"
+                android:id="@+id/vehicle_textSecondary"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="0"
@@ -63,7 +62,7 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Body1"
                 android:textColor="?attr/textColor"
                 android:textSize="12sp"
-                android:visibility="gone" />
+                />
 
         </LinearLayout>
     </LinearLayout>

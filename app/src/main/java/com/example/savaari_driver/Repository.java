@@ -104,6 +104,25 @@ public class Repository
     {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().endRideWithPayment(rideID, payment, driverID)));
     }
+
+    // Sending Register Driver request
+    public void sendRegisterDriverRequest(OnDataLoadedListener callback, Driver driver) {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().sendRegistrationRequest(driver)));
+    }
+
+    // Sending Vehicle Registration Request
+    public void sendVehicleRegistrationRequest(OnDataLoadedListener callback, Driver driver, Vehicle vehicle)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().sendVehicleRegistrationRequest(driver, vehicle)));
+    }
+
+    // Select Active Vehicle
+    public void selectActiveVehicle(OnDataLoadedListener callback, int driverID, int vehicleID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().selectActiveVehicle(driverID, vehicleID)));
+    }
+
+    // Getters and Setters
     public Driver getDriver() {
         return driver;
     }

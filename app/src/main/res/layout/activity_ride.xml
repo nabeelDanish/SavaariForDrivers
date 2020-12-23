@@ -76,8 +76,16 @@
             android:layout_width="wrap_content"
             android:layout_marginBottom="20dp"
             />
+        <include
+            layout="@layout/vehicle_select_layout"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:visibility="gone"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            />
 
-            <ProgressBar
+        <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -97,7 +105,7 @@
             android:elevation="30dp"
             android:hapticFeedbackEnabled="true"
             android:outlineProvider="background"
-            android:text="@string/active"
+            android:text="@string/select_vehicle"
             android:textSize="18sp" />
 
         <TextView

@@ -42,6 +42,7 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-annotations:2.11.3'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.11.3'
     implementation "com.google.android.gms:play-services-location:17.1.0"
+    implementation "com.google.guava:guava:16+"
 
     //Google Maps & Places API
     implementation 'com.google.android.gms:play-services-maps:17.0.0'

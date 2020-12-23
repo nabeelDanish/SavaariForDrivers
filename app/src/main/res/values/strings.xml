@@ -130,6 +130,22 @@
     <string name="start_ride">START RIDE</string>
     <string name="confirmRideEnd">END RIDE</string>
     <string name="driver_status">Your Offline</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="date_of_birth">Date of Birth</string>
+    <string name="vehicle_registration">Vehicle Registration</string>
+    <string name="previous_form">Previous</string>
+    <string name="next_form">Next</string>
+    <string name="register_driver">Register Driver</string>
+    <string name="request_sent">Request Sent</string>
+    <string name="make">Make</string>
+    <string name="vehicle_model">Vehicle Model</string>
+    <string name="vehicle_year">Year</string>
+    <string name="number_plate">Number Plate</string>
+    <string name="vehicle_color">Color</string>
+    <string name="register_vehicle">Register Vehicle</string>
+    <string name="select_vehicle">SELECT VEHICLE</string>
 
 
 </resources>
