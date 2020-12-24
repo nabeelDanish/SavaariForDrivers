@@ -19,8 +19,8 @@ public class VehicleMenuViewModelFactory implements ViewModelProvider.Factory {
     @NonNull
     @Override
     public <T extends ViewModel> T create(@NonNull Class<T> modelClass) {
-        if (modelClass.isAssignableFrom(com.example.savaari_driver.register.fragments.menu.VehicleMenuViewModel.class)) {
-            return (T) new com.example.savaari_driver.register.fragments.menu.VehicleMenuViewModel(repository);
+        if (modelClass.isAssignableFrom(VehicleMenuViewModel.class)) {
+            return (T) new VehicleMenuViewModel(repository);
         } else {
             throw new IllegalArgumentException("Unknown ViewModel class");
         }

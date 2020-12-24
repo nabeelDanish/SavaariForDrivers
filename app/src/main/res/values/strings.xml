@@ -63,7 +63,7 @@
 
     <!-- TASK ACTIVITY -->
 
-    <string name="navYourTrips">Your trips</string>
+    <string name="navYourTrips">Your Trips</string>
     <string name="navHelp">Help</string>
     <string name="navWallet">Wallet</string>
     <string name="navSettings">Settings</string>
@@ -146,6 +146,8 @@
     <string name="vehicle_color">Color</string>
     <string name="register_vehicle">Register Vehicle</string>
     <string name="select_vehicle">SELECT VEHICLE</string>
-
-
+    <string name="your_vehicles">Your Vehicles</string>
+    <string name="your_documents">Your Documents</string>
+    <string name="cnic">CNIC</string>
+    <string name="license_number">License Number</string>
 </resources>

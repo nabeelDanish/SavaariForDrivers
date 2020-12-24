@@ -50,6 +50,7 @@ import com.example.savaari_driver.Util;
 import com.example.savaari_driver.entity.Driver;
 import com.example.savaari_driver.entity.Ride;
 import com.example.savaari_driver.entity.Vehicle;
+import com.example.savaari_driver.register.RegisterActivity;
 import com.example.savaari_driver.ride.adapter.OnItemClickListener;
 import com.example.savaari_driver.ride.adapter.VehicleSelectAdapter;
 import com.example.savaari_driver.ride.adapter.VehicleTypeItem;
@@ -66,6 +67,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
@@ -107,6 +109,9 @@ public class RideActivity
 
     // Util Variables
     private final String TAG = RideActivity.this.getClass().getCanonicalName();
+
+    // Flags
+    boolean matchMakingStarted = false;
 
     // Map related Variables
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
@@ -328,9 +333,13 @@ public class RideActivity
             // Observer for Ride found
             rideViewModel.isRideFound().observe(this, aBoolean -> {
                 progressBar.setVisibility(View.INVISIBLE);
-                if (aBoolean)
-                {
-                    confirmRideRequest();
+                if (aBoolean != null) {
+                    if (aBoolean) {
+                        confirmRideRequest();
+                    } else {
+                        matchMakingStarted = false;
+                        driverActiveState();
+                    }
                 }
             });
 
@@ -409,7 +418,7 @@ public class RideActivity
                         }
                     }
                 }
-                else if (rideViewModel.isRideFound().getValue())
+                else if (rideViewModel.isRideFound().getValue() != null && rideViewModel.isRideFound().getValue())
                 {
                     rejectRideRequest();
                 }
@@ -459,7 +468,9 @@ public class RideActivity
                 removeMarkersPolyline();
 
                 // Calling View Model
-                rideViewModel.startMatchMaking();
+                if (!matchMakingStarted)
+                    matchMakingStarted = true;
+                    rideViewModel.startMatchMaking();
             }
         }
     }
@@ -505,7 +516,7 @@ public class RideActivity
     {
         Log.d(TAG, "confirmRideRequest: inside UI");
         // Setting UI Elements
-        // rideDetailsPanel.setAnimation(Util.inFromBottomAnimation(400));
+        rideDetailsPanel.setAnimation(Util.inFromBottomAnimation(400));
         rideDetailsPanel.setVisibility(View.VISIBLE);
         riderNameView.setText(rideViewModel.getRideRequest().getRider().getUsername());
         riderRatingBar.setRating(rideViewModel.getRideRequest().getRider().getRating());
@@ -710,6 +721,9 @@ public class RideActivity
         Toast.makeText(RideActivity.this, "Map is ready", Toast.LENGTH_SHORT).show();
         this.googleMap = googleMap;
         googleMap.setOnPolylineClickListener(this);
+        googleMap.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                        this, R.raw.map_style));
 
         if (locationPermissionGranted) {
 
@@ -1042,16 +1056,29 @@ public class RideActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
 
         drawer.closeDrawer(GravityCompat.START);
-
-        switch (item.getItemId()) {
+        Intent i;
+        // Main Switch Case for NavBar
+        switch (item.getItemId())
+        {
             case (R.id.nav_your_trips):
             case (R.id.nav_help):
             case (R.id.nav_wallet):
                 break;
-            case (R.id.nav_settings):
-                Intent i = new Intent(RideActivity.this, SettingsActivity.class);
+            case (R.id.nav_your_documents):
+                i = new Intent(RideActivity.this, RegisterActivity.class);
+                i.putExtra("FROM_RIDE", true);
+                i.putExtra("WHERE", 1);
                 startActivity(i);
-                finish();
+                break;
+            case (R.id.nav_your_vehicles):
+                i = new Intent(RideActivity.this, RegisterActivity.class);
+                i.putExtra("FROM_RIDE", true);
+                i.putExtra("WHERE", 2);
+                startActivity(i);
+                break;
+            case (R.id.nav_settings):
+                i = new Intent(RideActivity.this, SettingsActivity.class);
+                startActivity(i);
                 break;
         }
         return true;

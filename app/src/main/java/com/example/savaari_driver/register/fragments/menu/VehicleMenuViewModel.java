@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModel;
 import com.example.savaari_driver.Repository;
 import com.example.savaari_driver.entity.*;
 
-public class VehicleMenuViewModel extends ViewModel {
-
+public class VehicleMenuViewModel extends ViewModel
+{
     // Main Attributes
     private final Repository repository;
     private Driver driver;

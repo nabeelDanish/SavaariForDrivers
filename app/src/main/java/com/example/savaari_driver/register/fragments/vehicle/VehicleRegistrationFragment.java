@@ -1,6 +1,7 @@
 package com.example.savaari_driver.register.fragments.vehicle;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,13 +18,17 @@ import androidx.lifecycle.ViewModelProviders;
 
 import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
-import com.example.savaari_driver.register.fragments.RegistrationClickListener;
+import com.example.savaari_driver.entity.Vehicle;
+import com.example.savaari_driver.register.fragments.FragmentClickListener;
 
 public class VehicleRegistrationFragment extends Fragment {
 
+    private final String TAG = this.getClass().getCanonicalName();
     // Main Attributes
-    private RegistrationClickListener registrationClickListener;
+    private FragmentClickListener fragmentClickListener;
     private VehicleRegistrationViewModel mViewModel;
+    private boolean firstTime = true;
+    int position = -1;
 
     // UI Elements
     private EditText makeText;
@@ -36,15 +41,15 @@ public class VehicleRegistrationFragment extends Fragment {
     private TextView successText;
 
     // Main Methods
-    public static VehicleRegistrationFragment newInstance(RegistrationClickListener registrationClickListener) {
-        return new VehicleRegistrationFragment(registrationClickListener);
+    public static VehicleRegistrationFragment newInstance(FragmentClickListener fragmentClickListener) {
+        return new VehicleRegistrationFragment(fragmentClickListener);
     }
 
     public VehicleRegistrationFragment() {
         // Empty Constructor
     }
-    public VehicleRegistrationFragment(RegistrationClickListener registrationClickListener) {
-        this.registrationClickListener = registrationClickListener;
+    public VehicleRegistrationFragment(FragmentClickListener fragmentClickListener) {
+        this.fragmentClickListener = fragmentClickListener;
     }
 
     @Override
@@ -91,11 +96,60 @@ public class VehicleRegistrationFragment extends Fragment {
                 if (aBoolean) {
                     Toast.makeText(getContext(), "Request Sent Success", Toast.LENGTH_SHORT).show();
                     successText.setVisibility(View.VISIBLE);
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    fragmentClickListener.onVehicleMenuClick();
                 } else {
-                    Toast.makeText(getContext(), "Request Sent Failed!", Toast.LENGTH_SHORT).show();
+                    if (!firstTime)
+                        Toast.makeText(getContext(), "Request Sent Failed!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        position = getArguments().getInt("POSITION");
+        // Observing already loaded Data
+        mViewModel.getFirstTime().observe(getViewLifecycleOwner(), aBoolean -> {
+            if (aBoolean != null) {
+                if (!aBoolean && position >= 0) {
+                    init();
                 }
             }
         });
     }
 
+    private void init() {
+        // Disabling UI and setting text
+        firstTime = false;
+        String[] statusCodes = {"", "Request Sent", "Request Rejected", "Request Accepted", "Vehicle Active!"};
+        registerButton.setVisibility(View.GONE);
+
+        try {
+            Log.d(TAG, "init: position = " + position);
+            if (position >= 0) {
+                Vehicle vehicle = mViewModel.getDriver().getVehicles().get(position);
+
+                makeText.setKeyListener(null);
+                makeText.setText(vehicle.getMake());
+
+                modelText.setKeyListener(null);
+                modelText.setText(vehicle.getModel());
+
+                yearText.setKeyListener(null);
+                yearText.setText(vehicle.getYear());
+
+                numberPlateText.setKeyListener(null);
+                numberPlateText.setText(vehicle.getNumberPlate());
+
+                colorText.setKeyListener(null);
+                colorText.setText(vehicle.getColor());
+
+                successText.setText(statusCodes[vehicle.getStatus()]);
+                successText.setVisibility(View.VISIBLE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

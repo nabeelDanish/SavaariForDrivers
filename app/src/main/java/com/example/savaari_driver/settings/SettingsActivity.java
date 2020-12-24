@@ -89,7 +89,6 @@ public class SettingsActivity extends Util implements SettingsClickListener {
             onBackPressed();
             return true;
         }
-
         return(super.onOptionsItemSelected(item));
     }
 

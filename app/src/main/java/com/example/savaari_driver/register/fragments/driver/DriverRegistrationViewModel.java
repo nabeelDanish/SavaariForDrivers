@@ -18,6 +18,7 @@ public class DriverRegistrationViewModel extends ViewModel {
 
     // Flags
     private final MutableLiveData<Boolean> isRequestSent = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> isFirstTime = new MutableLiveData<>();
 
     // ----------------------------------------------------------------------------------------------
 
@@ -26,7 +27,10 @@ public class DriverRegistrationViewModel extends ViewModel {
         this.repository = repository;
         driver = repository.getDriver();
         if (driver != null) {
-            isRequestSent.setValue(driver.getStatus() == Driver.DV_REQ_SENT);
+            if (driver.getStatus() > Driver.DV_DEFAULT) {
+                isRequestSent.setValue(driver.getStatus() == Driver.DV_REQ_SENT);
+                isFirstTime.setValue(false);
+            }
         }
     }
 
@@ -51,6 +55,8 @@ public class DriverRegistrationViewModel extends ViewModel {
         driver.setCNIC(cnic);
         driver.setLicenseNumber(licenseNumber);
 
+        isFirstTime.setValue(true);
+
         repository.sendRegisterDriverRequest(object -> {
             if (object != null) {
                 boolean aBoolean = (boolean) object;
@@ -61,5 +67,9 @@ public class DriverRegistrationViewModel extends ViewModel {
                 isRequestSent.postValue(false);
             }
         }, driver);
+    }
+
+    public MutableLiveData<Boolean> getIsFirstTime() {
+        return isFirstTime;
     }
 }

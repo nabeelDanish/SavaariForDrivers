@@ -7,6 +7,7 @@ public class VehicleTypeItem
     private int vehicleImage;
     private String vehicleMakeModel;
     private String vehicleRideType;
+    private String status;
 
     // Constructors
     public VehicleTypeItem() {
@@ -43,5 +44,11 @@ public class VehicleTypeItem
     }
     public void setIndexInArray(int indexInArray) {
         this.indexInArray = indexInArray;
+    }
+    public String getStatus() {
+        return status;
+    }
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

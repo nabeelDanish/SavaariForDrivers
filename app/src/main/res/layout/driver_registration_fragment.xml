@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".register.fragments.driver.DriverRegistrationFragment">
+    tools:context=".register.fragments.driver.DriverRegistrationFragment"
+    android:background="?attr/backgroundColor">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -92,7 +93,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="96dp"
                 android:layout_marginEnd="24dp"
-                android:hint="@string/first_name"
+                android:hint="@string/cnic"
                 android:padding="18dp"
                 android:inputType="number"
                 android:selectAllOnFocus="true"
@@ -107,7 +108,7 @@
                 android:layout_marginStart="24dp"
                 android:layout_marginTop="16dp"
                 android:layout_marginEnd="24dp"
-                android:hint="@string/last_name"
+                android:hint="@string/license_number"
                 android:inputType="number"
                 android:padding="18dp"
                 android:selectAllOnFocus="true"
@@ -124,7 +125,7 @@
             android:layout_marginStart="80dp"
             android:layout_marginTop="80dp"
             android:layout_marginEnd="80dp"
-            android:background="@drawable/transparent_rounded_btn"
+            android:background="@drawable/transparent_rounded_btn_light"
             android:elegantTextHeight="true"
             android:layout_weight="2"
             android:fontFamily="sans-serif-medium"
@@ -133,7 +134,7 @@
             android:textAlignment="center"
             android:textAllCaps="false"
             android:textAppearance="@style/TextAppearance.AppCompat.Display4"
-            android:textColor="?attr/foregroundColor"
+            android:textColor="?attr/textColor"
             android:textSize="18sp"
             />
     </LinearLayout>

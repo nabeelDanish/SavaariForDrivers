@@ -118,7 +118,7 @@
             android:text="@string/driver_status"
             android:textSize="18sp"
             android:textAlignment="center"
-            android:background="?attr/deselectedForegroundColor"
+            android:background="?attr/foregroundColor"
             android:textColor="?attr/textColor" />
         </LinearLayout>
     </RelativeLayout>

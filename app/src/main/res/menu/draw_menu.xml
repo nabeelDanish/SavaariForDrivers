@@ -11,6 +11,20 @@
             android:checkable="true"
             android:checked="true" />
 
+        <item android:id="@+id/nav_your_documents"
+            android:icon="@drawable/ic_document"
+            android:title="@string/your_documents"
+            android:checkable="true"
+            android:checked="false"
+            />
+
+        <item android:id="@+id/nav_your_vehicles"
+            android:icon="@drawable/ic_car"
+            android:title="@string/your_vehicles"
+            android:checkable="true"
+            android:checked="false"
+            />
+
         <item android:id="@+id/nav_help"
             android:icon="@drawable/ic_help"
             android:title="@string/navHelp"

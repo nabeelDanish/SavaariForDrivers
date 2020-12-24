@@ -378,7 +378,7 @@ public class RideViewModel extends ViewModel {
             if (object != null) {
                 boolean aBoolean = (boolean) object;
                 if (aBoolean && found_status == 1) {
-                    rideFound.postValue(false);
+                    // rideFound.postValue(false);
                     checkRideStatus();
                 } else {
                     rideFound.postValue(false);
@@ -477,10 +477,10 @@ public class RideViewModel extends ViewModel {
     //                                  UTILITY FUNCTIONS
     // ---------------------------------------------------------------------------------------------
     public void resetFlags() {
-        rideStatus.postValue(Ride.COMPLETED);
         IS_TAKING_RIDE.postValue(0);
         rideStatus.postValue(Ride.DEFAULT);
         markedActive.postValue(true);
         nearPickup.postValue(false);
+        rideFound.postValue(null);
     }
 }

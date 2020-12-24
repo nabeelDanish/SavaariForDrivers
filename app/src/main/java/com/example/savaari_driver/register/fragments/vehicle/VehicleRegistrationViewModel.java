@@ -22,16 +22,26 @@ public class VehicleRegistrationViewModel extends ViewModel {
 
     // Flags
     private MutableLiveData<Boolean> registerVehicleSent = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> firstTime = new MutableLiveData<>();
 
     // Main Constructor
     public VehicleRegistrationViewModel(Repository repository) {
         this.repository = repository;
         driver = repository.getDriver();
+        if (driver != null) {
+            firstTime.setValue(false);
+        }
     }
 
     // Getters and Setters
     public LiveData<Boolean> getRegisterVehicleSent() {
         return registerVehicleSent;
+    }
+    public MutableLiveData<Boolean> getFirstTime() {
+        return firstTime;
+    }
+    public Driver getDriver() {
+        return driver;
     }
 
     // Main Methods
