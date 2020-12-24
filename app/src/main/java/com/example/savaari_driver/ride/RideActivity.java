@@ -144,6 +144,9 @@ public class RideActivity
     private TextView riderNameView;
     private RatingBar riderRatingBar;
     private LinearLayout vehicleSelectLayout;
+    private LinearLayout rateRideCard;
+    private RatingBar feedbackRatingBar;
+    private Button submitRating;
 
     // Broadcast Receiver Function
     BroadcastReceiver locationUpdateReceiver = new BroadcastReceiver()
@@ -219,6 +222,10 @@ public class RideActivity
             rideDetailsPanel.setVisibility(View.INVISIBLE);
 
             vehicleSelectLayout = findViewById(R.id.select_vehicle_card);
+
+            rateRideCard = findViewById(R.id.end_of_ride_details_panel);
+            feedbackRatingBar = findViewById(R.id.feedback_rating_bar);
+            submitRating = findViewById(R.id.submit_rating);
 
             // Getting View Model
             rideViewModel = new ViewModelProvider(this, new RideViewModelFactory(USER_ID,
@@ -363,6 +370,21 @@ public class RideActivity
                             matchmakingControllerBtn.setText("SELECT VEHICLE");
                     }
                     rideStatusBar.setText("Your Offline");
+                }
+            });
+
+            // Observing Ride Rating Flag
+            rideViewModel.getGiveRiderFeedback().observe(this, aBoolean -> {
+                progressBar.setVisibility(View.INVISIBLE);
+                if (aBoolean != null) {
+                    if (aBoolean) {
+                        giveFeedback();
+                    } else {
+                        Toast.makeText(RideActivity.this, "Feedback Failed!", Toast.LENGTH_SHORT).show();
+                    }
+                } else {
+                    rateRideCard.setAnimation(Util.outToBottomAnimation());
+                    rateRideCard.setVisibility(View.GONE);
                 }
             });
         }// End of Else: Location Permission Granted
@@ -571,7 +593,7 @@ public class RideActivity
         // Set up the input
         final EditText input = new EditText(this);
         // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setInputType(InputType.TYPE_CLASS_NUMBER);
         builder.setView(input);
 
         // Set up the buttons
@@ -581,6 +603,21 @@ public class RideActivity
         });
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
+    }
+    private void giveFeedback()
+    {
+        // Setting UI
+        rateRideCard.setAnimation(Util.inFromBottomAnimation(400));
+        rateRideCard.setVisibility(View.VISIBLE);
+
+        // Setting onClick Listener
+        submitRating.setOnClickListener(view -> {
+            progressBar.setVisibility(View.VISIBLE);
+            float rating = feedbackRatingBar.getRating();
+
+            // Calling Ride View Model
+            rideViewModel.giveRiderFeedback(rating);
+        });
     }
 
     // --------------------------------------------------------------------------------------------

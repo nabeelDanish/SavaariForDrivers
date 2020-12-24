@@ -122,6 +122,12 @@ public class Repository
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().selectActiveVehicle(driverID, vehicleID)));
     }
 
+    // Give Feedback for Rider
+    public void giveFeedbackForRider(OnDataLoadedListener callback, Ride ride, float rating)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().giveFeedbackForRider(ride, rating)));
+    }
+
     // Getters and Setters
     public Driver getDriver() {
         return driver;

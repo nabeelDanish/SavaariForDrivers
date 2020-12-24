@@ -542,6 +542,25 @@ public class NetworkUtil
             return false;
         }
     }
-
+    // Give Feedback for Rider
+    public boolean giveFeedbackForRider(Ride ride, float rating)
+    {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", ride.getRideID());
+            jsonObject.put("RIDER_ID", ride.getRider().getUserID());
+            jsonObject.put("RATING", rating);
+            String result = sendPost(urlAddress + "giveFeedbackForRider", jsonObject);
+            if (result != null) {
+                jsonObject = new JSONObject(result);
+                return jsonObject.getInt("STATUS") == 200;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     /*  END OF CLASS */
 } // End of Class

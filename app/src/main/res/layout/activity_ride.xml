@@ -84,6 +84,12 @@
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
             />
+        <include
+            layout="@layout/rate_ride_card"
+            android:layout_marginBottom="20dp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="gone"/>
 
         <ProgressBar
             android:id="@+id/progressBar"
@@ -119,7 +125,7 @@
             android:textSize="18sp"
             android:textAlignment="center"
             android:background="?attr/foregroundColor"
-            android:textColor="?attr/textColor" />
+            android:textColor="?attr/textColor"/>
         </LinearLayout>
     </RelativeLayout>
 

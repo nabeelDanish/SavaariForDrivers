@@ -50,6 +50,7 @@ public class RideViewModel extends ViewModel {
     private final MutableLiveData<Integer> rideStatus = new MutableLiveData<>(Ride.DEFAULT);
     private final MutableLiveData<Boolean> nearPickup = new MutableLiveData<>(false);
     private final MutableLiveData<Integer> vehicleSelected = new MutableLiveData<>();
+    private final MutableLiveData<Boolean> giveRiderFeedback = new MutableLiveData<>();
     private boolean locationLoaded = false;
     private boolean matchmakingStarted = false;
 
@@ -130,6 +131,9 @@ public class RideViewModel extends ViewModel {
     }
     public LiveData<Integer> getVehicleSelected() {
         return vehicleSelected;
+    }
+    public LiveData<Boolean> getGiveRiderFeedback() {
+        return giveRiderFeedback;
     }
 
     // Setting LiveData flags
@@ -462,6 +466,7 @@ public class RideViewModel extends ViewModel {
                     Log.d(TAG, "endRideWithPayment: jsonObject = " + aBoolean);
                     if (aBoolean) {
                         resetFlags();
+                        giveRiderFeedback.postValue(true);
                     }
                 }
                 else {
@@ -471,6 +476,26 @@ public class RideViewModel extends ViewModel {
                 e.printStackTrace();
             }
         }, ride.getRideID(), ride.getPayment(), driver.getUserID());
+    }
+
+    public void giveRiderFeedback(float rating) {
+        repository.giveFeedbackForRider(object -> {
+            try {
+                if (object != null) {
+                    boolean aBoolean = (boolean) object;
+                    if (aBoolean) {
+                        giveRiderFeedback.postValue(null);
+                    } else {
+                        giveRiderFeedback.postValue(false);
+                    }
+                } else {
+                    giveRiderFeedback.postValue(false);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                giveRiderFeedback.postValue(false);
+            }
+        }, ride, rating);
     }
 
     // ---------------------------------------------------------------------------------------------
