@@ -9,6 +9,7 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
 import com.example.savaari_driver.R;
+import com.example.savaari_driver.entity.Driver;
 
 public class LoginViewModel extends ViewModel {
 
@@ -17,7 +18,11 @@ public class LoginViewModel extends ViewModel {
     private final MutableLiveData<Integer> userID = new MutableLiveData<>();
     private MutableLiveData<LoginFormState> loginFormState = new MutableLiveData<>();
     private MutableLiveData<RecoveryFormState> recoveryFormState = new MutableLiveData<>();
+
     private Repository repository;
+    private Driver driver;
+
+    private final MutableLiveData<Boolean> userdataLoaded = new MutableLiveData<>();
 
     // Methods
     LiveData<LoginFormState> getLoginFormState() {
@@ -34,6 +39,7 @@ public class LoginViewModel extends ViewModel {
     public LoginViewModel(Repository repository)
     {
         this.repository = repository;
+        driver = repository.getDriver();
     }
 
     public void loginAction(String username, String password) {
@@ -49,6 +55,24 @@ public class LoginViewModel extends ViewModel {
             }
 
         }, username, password);
+    }
+    // Function to load Driver data and store in repository
+    public void loadDriverData(int userID) {
+        repository.loadUserData(object -> {
+            try {
+                if (object != null) {
+                    repository.setDriver((Driver) object);
+                    driver = repository.getDriver();
+                    Log.d(LOG_TAG, "loadDriverData: User Data Loaded!");
+                    userdataLoaded.postValue(true);
+                } else {
+                    userdataLoaded.postValue(false);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                userdataLoaded.postValue(false);
+            }
+        }, userID);
     }
 
     public void recoveryEmailDataChanged(String username) {
@@ -107,5 +131,16 @@ public class LoginViewModel extends ViewModel {
         super.onCleared();
 
         Log.d("this happened!", "the fuck");
+    }
+
+    // Getters and Setters
+    public MutableLiveData<Boolean> getUserdataLoaded() {
+        return userdataLoaded;
+    }
+    public Driver getDriver() {
+        return driver;
+    }
+    public void setDriver(Driver driver) {
+        this.driver = driver;
     }
 }

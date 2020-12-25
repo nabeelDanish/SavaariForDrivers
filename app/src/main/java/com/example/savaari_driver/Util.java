@@ -42,6 +42,20 @@ public class Util extends AppCompatActivity
         return inFromRight;
     }
 
+    public static Animation inFromLeftAnimation(int duration) {
+        Animation inFromRight = new TranslateAnimation( Animation.RELATIVE_TO_PARENT, -1.0f, Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+        inFromRight.setDuration(duration);
+        inFromRight.setInterpolator(new AccelerateInterpolator());
+        return inFromRight;
+    }
+
+    public static Animation outToLeftAnimation(int duration) {
+        Animation outToRight = new TranslateAnimation( Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, -1.0f, Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
+        outToRight.setDuration(duration);
+        outToRight.setInterpolator(new AccelerateInterpolator());
+        return outToRight;
+    }
+
     public static Animation outToRightAnimation(int duration) {
         Animation outToRight = new TranslateAnimation( Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, +1.0f, Animation.RELATIVE_TO_PARENT, 0.0f, Animation.RELATIVE_TO_PARENT, 0.0f);
         outToRight.setDuration(duration);

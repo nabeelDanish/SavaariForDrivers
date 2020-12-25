@@ -27,7 +27,7 @@ public class SettingsFragment extends ListFragment {
       "Reminders",
       "Notifications",
       "Support",
-            "Log out"
+      "Log out"
     };
 
     int[] icons = new int[] {

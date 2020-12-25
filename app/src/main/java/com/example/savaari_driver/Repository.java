@@ -9,6 +9,7 @@ public class Repository
 {
     // Main Attributes
     private final Executor executor;
+    private Driver driver;
 
     // Constructor
     Repository(Executor executor) {
@@ -102,5 +103,36 @@ public class Repository
     public void endRideWithPayment(OnDataLoadedListener callback, int rideID, Payment payment, int driverID)
     {
         executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().endRideWithPayment(rideID, payment, driverID)));
+    }
+
+    // Sending Register Driver request
+    public void sendRegisterDriverRequest(OnDataLoadedListener callback, Driver driver) {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().sendRegistrationRequest(driver)));
+    }
+
+    // Sending Vehicle Registration Request
+    public void sendVehicleRegistrationRequest(OnDataLoadedListener callback, Driver driver, Vehicle vehicle)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().sendVehicleRegistrationRequest(driver, vehicle)));
+    }
+
+    // Select Active Vehicle
+    public void selectActiveVehicle(OnDataLoadedListener callback, int driverID, int vehicleID)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().selectActiveVehicle(driverID, vehicleID)));
+    }
+
+    // Give Feedback for Rider
+    public void giveFeedbackForRider(OnDataLoadedListener callback, Ride ride, float rating)
+    {
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().giveFeedbackForRider(ride, rating)));
+    }
+
+    // Getters and Setters
+    public Driver getDriver() {
+        return driver;
+    }
+    public void setDriver(Driver driver) {
+        this.driver = driver;
     }
 }

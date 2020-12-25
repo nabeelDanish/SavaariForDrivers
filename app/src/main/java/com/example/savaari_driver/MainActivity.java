@@ -4,12 +4,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.ImageView;
 
 import com.example.savaari_driver.auth.login.LoginActivity;
-import com.example.savaari_driver.ride.RideActivity;
+import com.example.savaari_driver.register.RegisterActivity;
 
 
 public class MainActivity extends Util {
@@ -38,9 +35,9 @@ public class MainActivity extends Util {
         setContentView(R.layout.activity_main);
 
         // Expand logo animation
-//        ImageView logo = findViewById(R.id.logo);
-//        Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.zoom);
-//        logo.startAnimation(animation);
+        // ImageView logo = findViewById(R.id.logo);
+        // Animation animation = AnimationUtils.loadAnimation(MainActivity.this, R.anim.zoom);
+        // logo.startAnimation(animation);
 
         SharedPreferences sh
                 = getSharedPreferences("AuthSharedPref",
@@ -53,13 +50,12 @@ public class MainActivity extends Util {
         else {
             ((SavaariApplication) getApplication()).getRepository().persistLogin(object -> {
                 if (object == null || !((Boolean) object)) {
-                    launchRideActivity(USER_ID, false);
+                    launchRegisterActivity(USER_ID, false);
                 }
 
-                launchRideActivity(USER_ID, true);
+                launchRegisterActivity(USER_ID, true);
             }, USER_ID);
         }
-
     }
 
     public void launchLoginActivity() {
@@ -69,8 +65,8 @@ public class MainActivity extends Util {
         finish();
     }
 
-    public void launchRideActivity(int userID, boolean apiConnection) {
-        Intent i = new Intent(MainActivity.this, RideActivity.class);
+    public void launchRegisterActivity(int userID, boolean apiConnection) {
+        Intent i = new Intent(MainActivity.this, RegisterActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         i.putExtra("USER_ID", userID);
         i.putExtra("API_CONNECTION", apiConnection);
@@ -78,5 +74,3 @@ public class MainActivity extends Util {
         finish();
     }
 }
-
-//

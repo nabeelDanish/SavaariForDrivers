@@ -35,6 +35,7 @@ public class RideRequest {
     private String dropoffTitle;
     protected int findStatus;
     protected Integer paymentMethod;
+    private int rideType;
 
     // ----------------------------------------------------------------
     //                          MAIN METHODS
@@ -93,5 +94,11 @@ public class RideRequest {
     }
     public void setPaymentMethod(Integer paymentMethod) {
         this.paymentMethod = paymentMethod;
+    }
+    public int getRideType() {
+        return rideType;
+    }
+    public void setRideType(int rideType) {
+        this.rideType = rideType;
     }
 }

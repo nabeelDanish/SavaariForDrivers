@@ -11,7 +11,7 @@
         <item name="deselectedForegroundColor">#A9A9A9</item>
         <item name="textColor">#FFFFFF</item>
         <item name="lightTextColor">#9C9C9C</item>
-        <item name="negativeTextColor">#000000</item>
+        <item name="negativeTextColor">#FFFFFF</item>
         <item name = "android:statusBarColor">@android:color/transparent</item>
         <item name = "lightForegroundColor">#949494</item>
         <item name = "foregroundItemColor">#15FFFFFF</item>

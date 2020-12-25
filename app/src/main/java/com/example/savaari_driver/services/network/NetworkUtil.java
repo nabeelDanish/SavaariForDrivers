@@ -2,11 +2,8 @@ package com.example.savaari_driver.services.network;
 
 import android.text.TextUtils;
 import android.util.Log;
-import com.example.savaari_driver.entity.Driver;
-import com.example.savaari_driver.entity.Location;
-import com.example.savaari_driver.entity.Payment;
-import com.example.savaari_driver.entity.Ride;
-import com.example.savaari_driver.entity.RideRequest;
+import com.example.savaari_driver.entity.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +24,7 @@ public class NetworkUtil
     // Main Attributes
     private static NetworkUtil networkUtil = null;
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://3fdfe447f459.ngrok.io/"; // remember to add a "/" at the end of the url
+    private static final String urlAddress = "https://34b5b53def1a.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // For Wrapping and Unwrapping
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -459,6 +456,111 @@ public class NetworkUtil
             return false;
         }
     }
+    // Sending Registration Request
+    public boolean sendRegistrationRequest(Driver driver)
+    {
+        JSONObject jsonObject = new JSONObject();
+        // Debugging Part
+        Driver testDriver = new Driver();
+        try {
+            String obj = objectMapper.writeValueAsString(testDriver);
+            try {
+                JSONObject tempJSON = new JSONObject(obj);
+                String result = sendPost(urlAddress + "jacksonTest", tempJSON);
+                if (result != null) {
+                    Log.d(TAG, "sendRegistrationRequest: Jackson Test: found something");
+                }
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        // Debugging Part
+        try {
+            jsonObject.put("USER_ID", driver.getUserID());
+            jsonObject.put("FIRST_NAME", driver.getFirstName());
+            jsonObject.put("LAST_NAME", driver.getLastName());
+            jsonObject.put("PHONE_NO", driver.getPhoneNo());
+            jsonObject.put("CNIC", driver.getCNIC());
+            jsonObject.put("LICENSE_NUMBER", driver.getLicenseNumber());
+            Log.d(TAG, "sendRegistrationRequest: jsonObject = " + jsonObject.toString());
+            String result = sendPost(urlAddress + "/registerDriver", jsonObject);
+            if (result != null) {
+                jsonObject = new JSONObject(result);
+                return jsonObject.getInt("STATUS") == 200;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "sendRegistrationRequest: Exception thrown!");
+            return false;
+        }
+    }
+    public boolean sendVehicleRegistrationRequest(Driver driver, Vehicle vehicle)
+    {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("DRIVER_ID", driver.getUserID());
+            jsonObject.put("MAKE", vehicle.getMake());
+            jsonObject.put("MODEL", vehicle.getModel());
+            jsonObject.put("YEAR", vehicle.getYear());
+            jsonObject.put("NUMBER_PLATE", vehicle.getNumberPlate());
+            jsonObject.put("COLOR", vehicle.getColor());
+            jsonObject.put("STATUS", vehicle.getStatus());
 
+            String result = sendPost(urlAddress + "sendVehicleRequest", jsonObject);
+            if (result != null) {
+                jsonObject = new JSONObject(result);
+                return jsonObject.getInt("STATUS") == 200;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Selecting Vehicle
+    public boolean selectActiveVehicle(int driverID, int vehicleID)
+    {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("USER_ID", driverID);
+            jsonObject.put("ACTIVE_VEHICLE_ID", vehicleID);
+            String result = sendPost(urlAddress + "selectActiveVehicle", jsonObject);
+            if (result != null) {
+                jsonObject = new JSONObject(result);
+                return jsonObject.getInt("STATUS") == 200;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    // Give Feedback for Rider
+    public boolean giveFeedbackForRider(Ride ride, float rating)
+    {
+        JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("RIDE_ID", ride.getRideID());
+            jsonObject.put("RIDER_ID", ride.getRider().getUserID());
+            jsonObject.put("RATING", rating);
+            String result = sendPost(urlAddress + "giveFeedbackForRider", jsonObject);
+            if (result != null) {
+                jsonObject = new JSONObject(result);
+                return jsonObject.getInt("STATUS") == 200;
+            } else {
+                return false;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
     /*  END OF CLASS */
 } // End of Class

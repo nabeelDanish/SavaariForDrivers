@@ -20,7 +20,7 @@ public class SavaariApplication extends Application
     {
         executorService = Executors.newFixedThreadPool(numThreads);
         repository = new com.example.savaari_driver.Repository(executorService);
-        scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(1);
+        scheduledThreadPoolExecutor = new ScheduledThreadPoolExecutor(2);
         LocationUpdateUtil.setRepository(repository);
     }
 

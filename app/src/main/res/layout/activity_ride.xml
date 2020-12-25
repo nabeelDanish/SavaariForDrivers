@@ -66,7 +66,8 @@
             android:orientation="vertical"
             android:layout_alignParentBottom="true">
 
-        <include layout="@layout/ride_request_card"
+        <include
+            layout="@layout/ride_request_card"
             android:id="@+id/ride_request_card"
             android:visibility="visible"
             android:layout_marginStart="20dp"
@@ -75,8 +76,22 @@
             android:layout_width="wrap_content"
             android:layout_marginBottom="20dp"
             />
+        <include
+            layout="@layout/vehicle_select_layout"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:visibility="gone"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            />
+        <include
+            layout="@layout/rate_ride_card"
+            android:layout_marginBottom="20dp"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:visibility="gone"/>
 
-            <ProgressBar
+        <ProgressBar
             android:id="@+id/progressBar"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -96,7 +111,7 @@
             android:elevation="30dp"
             android:hapticFeedbackEnabled="true"
             android:outlineProvider="background"
-            android:text="@string/active"
+            android:text="@string/select_vehicle"
             android:textSize="18sp" />
 
         <TextView
@@ -109,8 +124,8 @@
             android:text="@string/driver_status"
             android:textSize="18sp"
             android:textAlignment="center"
-            android:background="?attr/deselectedForegroundColor"
-            android:textColor="?attr/textColor" />
+            android:background="?attr/foregroundColor"
+            android:textColor="?attr/textColor"/>
         </LinearLayout>
     </RelativeLayout>
 
