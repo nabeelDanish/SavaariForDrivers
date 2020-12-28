@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
     <Button
         android:layout_width="fill_parent"
         android:layout_height="50dp"
@@ -13,5 +14,5 @@
         android:hapticFeedbackEnabled="true"
         android:outlineProvider="background"
         android:text="@string/select_vehicle"
-        android:textSize="18sp" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:textSize="18sp"/>
+</LinearLayout>

@@ -35,7 +35,8 @@ public class RideRequest {
     private String dropoffTitle;
     protected int findStatus;
     protected Integer paymentMethod;
-    private int rideType;
+    private RideType rideType;
+    private boolean splittingFare;
 
     // ----------------------------------------------------------------
     //                          MAIN METHODS
@@ -43,7 +44,10 @@ public class RideRequest {
 
     // Default Constructor
     public RideRequest() {
-
+        // Empty Constructor
+        driver = new Driver();
+        rider = new Rider();
+        rideType = new RideType();
     }
 
     // Getters and Setters
@@ -95,10 +99,16 @@ public class RideRequest {
     public void setPaymentMethod(Integer paymentMethod) {
         this.paymentMethod = paymentMethod;
     }
-    public int getRideType() {
+    public boolean isSplittingFare() {
+        return splittingFare;
+    }
+    public void setSplittingFare(boolean splittingFare) {
+        this.splittingFare = splittingFare;
+    }
+    public RideType getRideType() {
         return rideType;
     }
-    public void setRideType(int rideType) {
+    public void setRideType(RideType rideType) {
         this.rideType = rideType;
     }
 }

@@ -2,7 +2,7 @@ package com.example.savaari_driver.entity;
 
 import java.util.ArrayList;
 
-public class Ride extends RideRequest {
+public class Ride {
     public static final int
             PICKUP = 11,
             DRIVER_ARRIVED = 12,
@@ -24,13 +24,14 @@ public class Ride extends RideRequest {
     //                              MAIN ATTRIBUTES
     // -------------------------------------------------------------------------
     private int rideID;
-    private Vehicle vehicle;
+    private RideRequest rideParameters;
     private Payment payment;
     private long startTime;
     private long endTime;
     private double distanceTravelled;
     private double estimatedFare;
     private double fare;
+    private Policy policy;
     private int rideStatus;
     private int findStatus;
     private ArrayList<Location> stops;
@@ -39,11 +40,8 @@ public class Ride extends RideRequest {
     //                              MAIN METHODS
     // --------------------------------------------------------------------------
     public Ride() {
-        rider = new Rider();
-        driver = new Driver();
+        rideParameters = new RideRequest();
         payment = new Payment();
-        pickupLocation = null;
-        dropoffLocation = null;
         stops = new ArrayList<>();
         findStatus = DEFAULT;
     }
@@ -54,12 +52,6 @@ public class Ride extends RideRequest {
     }
     public void setRideID(int rideID) {
         this.rideID = rideID;
-    }
-    public Vehicle getVehicle() {
-        return vehicle;
-    }
-    public void setVehicle(Vehicle vehicle) {
-        this.vehicle = vehicle;
     }
     public Payment getPayment() {
         return payment;
@@ -114,5 +106,17 @@ public class Ride extends RideRequest {
     }
     public void setStops(ArrayList<Location> stops) {
         this.stops = stops;
+    }
+    public Policy getPolicy() {
+        return policy;
+    }
+    public void setPolicy(Policy policy) {
+        this.policy = policy;
+    }
+    public RideRequest getRideParameters() {
+        return rideParameters;
+    }
+    public void setRideParameters(RideRequest rideParameters) {
+        this.rideParameters = rideParameters;
     }
 }

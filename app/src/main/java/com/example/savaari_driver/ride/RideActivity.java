@@ -142,7 +142,7 @@ public class RideActivity
     private ProgressBar progressBar;
     private LinearLayout rideDetailsPanel;
     private TextView riderNameView;
-    private RatingBar riderRatingBar;
+    private TextView riderRatingBar;
     private LinearLayout vehicleSelectLayout;
     private LinearLayout rateRideCard;
     private RatingBar feedbackRatingBar;
@@ -214,10 +214,9 @@ public class RideActivity
             progressBar = findViewById(R.id.progressBar);
             progressBar.setVisibility(View.VISIBLE);
 
-            ConstraintLayout rideRequestCard = findViewById(R.id.ride_request_card);
-            rideDetailsPanel = rideRequestCard.findViewById(R.id.ride_detail_sub_panel);
-            riderNameView = rideRequestCard.findViewById(R.id.rider_name);
-            riderRatingBar = rideRequestCard.findViewById(R.id.rider_rating);
+            rideDetailsPanel = findViewById(R.id.ride_detail_sub_panel);
+            riderNameView = findViewById(R.id.rider_name);
+            riderRatingBar = findViewById(R.id.rider_rating);
 
             rideDetailsPanel.setVisibility(View.INVISIBLE);
 
@@ -272,7 +271,7 @@ public class RideActivity
 
                     // Create the Map Maker to Rider Location
                     MarkerOptions options = new MarkerOptions()
-                            .position(rideViewModel.getRide().getPickupLocation().toLatLng())
+                            .position(rideViewModel.getRide().getRideParameters().getPickupLocation().toLatLng())
                             .title("Pickup");
                     pickupMarker = googleMap.addMarker(options);
 
@@ -288,7 +287,7 @@ public class RideActivity
                     // Debugging Ends
 
                     calculateDirections(driverLocation.toLatLng(), pickupMarker, false);
-                    setDestination(rideViewModel.getRide().getDropoffLocation().toLatLng(), "Destination");
+                    setDestination(rideViewModel.getRide().getRideParameters().getDropoffLocation().toLatLng(), "Destination");
 
                     // Disable the button
                     matchmakingControllerBtn.setVisibility(View.INVISIBLE);
@@ -326,8 +325,9 @@ public class RideActivity
                     }
                     case Ride.TAKE_PAYMENT:
                     {
-                        String distanceTravelled = String.valueOf((rideViewModel.getRide().getDistanceTravelled()) / 1000);
-                        rideStatusBar.setText("You Travelled " + distanceTravelled + "km");
+                        Double distanceTravelled = (rideViewModel.getRide().getDistanceTravelled()) / 1000;
+                        String text = String.format("You Travelled %.1f km", distanceTravelled);
+                        rideStatusBar.setText(text);
 
                         matchmakingControllerBtn.setVisibility(View.VISIBLE);
                         matchmakingControllerBtn.setEnabled(true);
@@ -541,7 +541,7 @@ public class RideActivity
         rideDetailsPanel.setAnimation(Util.inFromBottomAnimation(400));
         rideDetailsPanel.setVisibility(View.VISIBLE);
         riderNameView.setText(rideViewModel.getRideRequest().getRider().getUsername());
-        riderRatingBar.setRating(rideViewModel.getRideRequest().getRider().getRating());
+        // riderRatingBar.setRating(rideViewModel.getRideRequest().getRider().getRating());
 
         matchmakingControllerBtn.setVisibility(View.VISIBLE);
         matchmakingControllerBtn.setText("CANCEL");
@@ -825,7 +825,7 @@ public class RideActivity
                 .title(title);
         destinationMarker = googleMap.addMarker(options);
 
-        calculateDirections(rideViewModel.getRide().getPickupLocation().toLatLng(),
+        calculateDirections(rideViewModel.getRide().getRideParameters().getPickupLocation().toLatLng(),
                 destinationMarker, true);
     }
     private void initializeNavigationBar() {
