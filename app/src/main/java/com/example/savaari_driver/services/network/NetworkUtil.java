@@ -24,7 +24,7 @@ public class NetworkUtil
     // Main Attributes
     private static NetworkUtil networkUtil = null;
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://a18674136af8.ngrok.io/"; // remember to add a "/" at the end of the url
+    private static final String urlAddress = "https://70b29666419e.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // For Wrapping and Unwrapping
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -53,11 +53,13 @@ public class NetworkUtil
     // -------------------------------------------------------------------------------
     // Sending POST Requests
     private String sendPost(String urlAddress, JSONObject jsonParam) {
+        Scanner scanner = null;
+        HttpURLConnection conn = null;
         try
         {
             // Creating the HTTP Connection
             URL url = new URL(urlAddress);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
             conn.setRequestProperty("Accept","application/json");
@@ -97,7 +99,6 @@ public class NetworkUtil
             }
 
             // Sending the Response Back to the User in JSON
-            Scanner scanner;
             try
             {
                 scanner = new Scanner(conn.getInputStream());
@@ -110,11 +111,8 @@ public class NetworkUtil
                 else {
                     Log.d(TAG, "sendPost: received null Input Stream");
                 }
-                scanner.close();
-                conn.disconnect();
                 return response;
-            } catch (IOException e)
-            {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             return null;
@@ -123,6 +121,12 @@ public class NetworkUtil
         {
             e.printStackTrace();
             return null;
+        }
+        finally {
+            if (scanner != null)
+                scanner.close();
+            if (conn != null)
+                conn.disconnect();
         }
     }
 
@@ -329,12 +333,13 @@ public class NetworkUtil
     }
 
     // Check Ride Status
-    public Ride checkRideStatus(int userID, int riderID)
+    public Ride checkRideStatus(int userID, int riderID, int rideTypeID)
     {
         JSONObject jsonParam = new JSONObject();
         try {
             jsonParam.put("USER_ID", userID);
             jsonParam.put("RIDER_ID", riderID);
+            jsonParam.put("RIDE_TYPE_ID", rideTypeID);
             String result = sendPost(urlAddress + "checkRideStatus", jsonParam);
             if (result != null) {
                 return objectMapper.readValue(result, Ride.class);
@@ -412,14 +417,29 @@ public class NetworkUtil
     }
 
     // Ending Ride
-    public double markDriverAtDestination(int rideID, double dist_travelled, int driverID) {
+    public double markDriverAtDestination(Ride ride, double dist_travelled, int driverID) {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("RIDE_ID", rideID);
+            // Preparing
+            jsonObject.put("RIDE_ID", ride.getRideID());
             jsonObject.put("DIST_TRAVELLED", dist_travelled);
             jsonObject.put("DRIVER_ID", driverID);
-            Log.d(TAG, "endRide(): " + jsonObject.toString());
+            jsonObject.put("POLICY_ID", ride.getPolicy().getPolicyID());
+            jsonObject.put("START_TIME", ride.getStartTime());
+            jsonObject.put("END_TIME", System.currentTimeMillis());
+
+            jsonObject.put("RIDE_TYPE_ID", ride.getRideParameters().getRideType().getTypeID());
+            jsonObject.put("NAME", ride.getRideParameters().getRideType().getName());
+            jsonObject.put("MAX_PASSENGERS", ride.getRideParameters().getRideType().getMaxPassengers());
+            jsonObject.put("BASE_FARE", ride.getRideParameters().getRideType().getBaseFare());
+            jsonObject.put("PER_KM_CHARGE", ride.getRideParameters().getRideType().getPerKMCharge());
+            jsonObject.put("PER_MIN_CHARGE", ride.getRideParameters().getRideType().getPerMinuteCharge());
+            jsonObject.put("MIN_FARE", ride.getRideParameters().getRideType().getMinimumFare());
+
+            // Sending Object
             String result =  sendPost(urlAddress + "markArrivalAtDestination", jsonObject);
+
+            // Parsing Result
             if (result != null) {
                 jsonObject = new JSONObject(result);
                 return jsonObject.getDouble("FARE");
@@ -442,7 +462,7 @@ public class NetworkUtil
             jsonObject.put("CHANGE", payment.getChange());
             jsonObject.put("PAYMENT_MODE", payment.getPaymentMode());
             jsonObject.put("DRIVER_ID", driverID);
-            Log.d(TAG, "endRideWithPayment: " + jsonObject.toString());
+
             String result = sendPost(urlAddress + "endRideWithPayment", jsonObject);
             if (result != null) {
                 jsonObject = new JSONObject(result);
@@ -548,7 +568,7 @@ public class NetworkUtil
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("RIDE_ID", ride.getRideID());
-            jsonObject.put("RIDER_ID", ride.getRider().getUserID());
+            jsonObject.put("RIDER_ID", ride.getRideParameters().getRider().getUserID());
             jsonObject.put("RATING", rating);
             String result = sendPost(urlAddress + "giveFeedbackForRider", jsonObject);
             if (result != null) {

@@ -207,7 +207,7 @@ public class RideViewModel extends ViewModel {
                     {
                         // Calculating distance to pickup location
                         driver.getCurrentLocation().setLatLng(new LatLng(latitude, longitude));
-                        double distance = Util.distance(latitude, longitude, ride.getPickupLocation().getLatitude(), ride.getPickupLocation().getLongitude());
+                        double distance = Util.distance(latitude, longitude, ride.getRideParameters().getPickupLocation().getLatitude(), ride.getRideParameters().getPickupLocation().getLongitude());
                         Log.d(TAG, "setUserCoordinates: distance to pickup = " + distance);
                         if (distance <= 100) {
                             Log.d(LOG_TAG, "setUserCoordinates(): setting near pickup to true");
@@ -224,7 +224,7 @@ public class RideViewModel extends ViewModel {
                         Log.d(LOG_TAG, "setUserCoordinates(): Distance Travelled = " + ride.getDistanceTravelled());
 
                         // Check if Near Drop-off Location
-                        distance = Util.distance(latitude, longitude, ride.getDropoffLocation().getLatitude(), ride.getDropoffLocation().getLongitude());
+                        distance = Util.distance(latitude, longitude, ride.getRideParameters().getDropoffLocation().getLatitude(), ride.getRideParameters().getDropoffLocation().getLongitude());
                         if (distance <= 100) {
                             Log.d(LOG_TAG, "setUserCoordinates(): near drop-off location");
                             rideStatus.setValue(Ride.NEAR_DROPFF);
@@ -299,7 +299,7 @@ public class RideViewModel extends ViewModel {
                 e.printStackTrace();
                 IS_TAKING_RIDE.postValue(0);
             }
-        }, driver.getUserID(), rideRequest.getRider().getUserID());
+        }, driver.getUserID(), rideRequest.getRider().getUserID(), rideRequest.getRideType().getTypeID());
     }
     public void setMarkActive(int activeStatus)
     {
@@ -446,7 +446,7 @@ public class RideViewModel extends ViewModel {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-        }, ride.getRideID(), ride.getDistanceTravelled(), driver.getUserID());
+        }, ride, ride.getDistanceTravelled(), driver.getUserID());
     }
 
     public void endRideWithPayment(double amountPaid) {

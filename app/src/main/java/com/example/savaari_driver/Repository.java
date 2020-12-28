@@ -70,9 +70,9 @@ public class Repository
     }
 
     // Check ride status
-    public void checkRideStatus(OnDataLoadedListener callback, int userID, int riderID)
+    public void checkRideStatus(OnDataLoadedListener callback, int userID, int riderID, int rideTypeID)
     {
-        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().checkRideStatus(userID, riderID)));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().checkRideStatus(userID, riderID, rideTypeID)));
     }
 
     // Confirm Ride Request
@@ -94,9 +94,9 @@ public class Repository
     }
 
     // Marking Arrival at destination
-    public void markDriverAtDestination(OnDataLoadedListener callback, int rideID, double dist_travelled, int driverID)
+    public void markDriverAtDestination(OnDataLoadedListener callback, Ride ride, double dist_travelled, int driverID)
     {
-        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().markDriverAtDestination(rideID, dist_travelled, driverID)));
+        executor.execute(() -> callback.onDataLoaded(NetworkUtil.getInstance().markDriverAtDestination(ride, dist_travelled, driverID)));
     }
 
     // Ending Ride with Payment

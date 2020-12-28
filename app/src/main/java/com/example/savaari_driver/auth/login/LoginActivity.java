@@ -274,7 +274,7 @@ public class LoginActivity extends Util
                         // Check Driver's eligibility to move to RideActivity
                         Intent i;
                         Driver driver = loginViewModel.getDriver();
-                        if (driver.getStatus() == Driver.DV_REQ_APPROVED && driver.getActiveVehicleID() == Vehicle.VH_REQ_ACCEPTED)
+                        if (driver.getStatus() == Driver.DV_REQ_APPROVED && driver.getActiveVehicle().getVehicleID() == Vehicle.VH_REQ_ACCEPTED)
                         {
                             i = new Intent(LoginActivity.this, RideActivity.class);
                         } else {

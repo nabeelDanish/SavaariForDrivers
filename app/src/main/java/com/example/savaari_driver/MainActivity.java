@@ -51,9 +51,9 @@ public class MainActivity extends Util {
             ((SavaariApplication) getApplication()).getRepository().persistLogin(object -> {
                 if (object == null || !((Boolean) object)) {
                     launchRegisterActivity(USER_ID, false);
+                } else {
+                    launchRegisterActivity(USER_ID, true);
                 }
-
-                launchRegisterActivity(USER_ID, true);
             }, USER_ID);
         }
     }

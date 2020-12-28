@@ -39,10 +39,16 @@ public class RegisterActivity
         implements FragmentClickListener, NavigationView.OnNavigationItemSelectedListener
 {
     private final String LOG_TAG = this.getClass().getCanonicalName();
+
     // Main Attributes
+
+    // Data and flags
     private RegisterViewModel registerViewModel;
-    private ProgressBar loadingCircle;
     private ScheduledFuture<?> future = null;
+    private boolean networkConnection = false;
+
+    // UI
+    private ProgressBar loadingCircle;
     private DrawerLayout drawer;
     private NavigationView navigationView;
     private View headerView;
@@ -76,7 +82,8 @@ public class RegisterActivity
 
         // Getting Stored Data
         Intent recvIntent = getIntent();
-        if (!recvIntent.getBooleanExtra("API_CONNECTION", true)) {
+        networkConnection = recvIntent.getBooleanExtra("API_CONNECTION", false);
+        if (!networkConnection) {
             Toast.makeText(this, "No network connection", Toast.LENGTH_SHORT).show();
         }
         int USER_ID = recvIntent.getIntExtra("USER_ID", -1);
@@ -88,9 +95,22 @@ public class RegisterActivity
 
         // Calling the Service again to Load Driver if not already
         if (registerViewModel.getDriver() == null) {
-            future = ((SavaariApplication) getApplication()).scheduledThreadPoolExecutor.scheduleWithFixedDelay(() -> registerViewModel.loadUserData(USER_ID),
+            future = ((SavaariApplication) getApplication()).scheduledThreadPoolExecutor.scheduleWithFixedDelay(() -> registerViewModel.persistConnection(USER_ID),
                     0L, 8L, TimeUnit.SECONDS);
         }
+
+        // On Persist Connection
+        registerViewModel.getPersistConnection().observe(this, aBoolean -> {
+            if (aBoolean != null) {
+                if (aBoolean) {
+                    Toast.makeText(this, "Connection Established!", Toast.LENGTH_SHORT).show();
+                    registerViewModel.loadUserData(USER_ID);
+                } else {
+                    Toast.makeText(this, "Connection Failed!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
         // On Data Loaded
         registerViewModel.getUserdataLoaded().observe(this, aBoolean -> {
             if (aBoolean != null) {
@@ -106,7 +126,7 @@ public class RegisterActivity
                 }
             }
         });
-    }
+    } // End of OnCreate Function()
 
     // Main Function for driver account logic
     private void checkDriverStatus()
@@ -157,7 +177,7 @@ public class RegisterActivity
                 }
                 else
                 {
-                    if (registerViewModel.getDriver().getActiveVehicleID() != Vehicle.DEFAULT_ID) {
+                    if (registerViewModel.getDriver().getActiveVehicle().getVehicleID() != Vehicle.DEFAULT_ID) {
                         // Goto Ride Activity
                         launchRideActivity();
                     } else {

@@ -24,7 +24,7 @@ public class Driver extends User
     private String CNIC;
     private String licenseNumber;
     private int status;
-    private int activeVehicleID;
+    private Vehicle activeVehicle;
     private ArrayList<Vehicle> vehicles;
 
     // ----------------------------------------------------------
@@ -84,16 +84,16 @@ public class Driver extends User
     public void setStatus(int status) {
         this.status = status;
     }
-    public int getActiveVehicleID() {
-        return activeVehicleID;
-    }
-    public void setActiveVehicleID(int activeVehicleID) {
-        this.activeVehicleID = activeVehicleID;
-    }
     public ArrayList<Vehicle> getVehicles() {
         return vehicles;
     }
     public void setVehicles(ArrayList<Vehicle> vehicles) {
         this.vehicles = vehicles;
+    }
+    public Vehicle getActiveVehicle() {
+        return activeVehicle;
+    }
+    public void setActiveVehicle(Vehicle activeVehicle) {
+        this.activeVehicle = activeVehicle;
     }
 }
