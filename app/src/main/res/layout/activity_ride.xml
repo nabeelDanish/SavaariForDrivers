@@ -66,16 +66,76 @@
             android:orientation="vertical"
             android:layout_alignParentBottom="true">
 
-        <include
-            layout="@layout/ride_request_card"
-            android:id="@+id/ride_request_card"
-            android:visibility="visible"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="20dp"
-            />
+            <LinearLayout
+                android:id="@+id/ride_detail_sub_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/ride_detail_card"
+                android:layout_marginBottom="25dp"
+                android:visibility="visible">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="25dp"
+                    android:gravity="center">
+                    <TextView
+                        android:id="@+id/rider_name"
+                        android:layout_width="wrap_content"
+                        android:layout_height="60dp"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginEnd="10dp"
+                        android:text="BikeShare"
+                        android:textAlignment="textStart"
+                        android:textSize="22sp"
+                        android:fontFamily="sans-serif"
+                        android:paddingTop="10dp"
+                        android:textColor="?attr/negativeTextColor"/>
+                    <ImageView
+                        android:id="@+id/rider_img"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_baseline_account_circle_24"
+                        android:backgroundTint="@color/color_transparent"
+                        app:tint="?attr/negativeTextColor" />
+                    <TextView
+                        android:id="@+id/rider_rating"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="4.57"
+                        android:textSize="22sp"
+                        android:fontFamily="sans-serif"
+                        android:paddingStart="25dp"
+                        android:layout_marginTop="10dp"/>
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/ic_baseline_star_rate_24"
+                        android:paddingTop="20dp"/>
+                </LinearLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="15dp">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:text="8 min"
+                        android:textSize="44sp"
+                        android:textAlignment="center"/>
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="1.7 km"
+                        android:textAlignment="center"
+                        android:textSize="24sp"/>
+                </LinearLayout>
+        </LinearLayout>
         <include
             layout="@layout/vehicle_select_layout"
             android:layout_marginStart="20dp"
@@ -83,6 +143,7 @@
             android:visibility="gone"
             android:layout_height="wrap_content"
             android:layout_width="match_parent"
+            android:layout_marginBottom="25dp"
             />
         <include
             layout="@layout/rate_ride_card"
@@ -126,7 +187,7 @@
         android:layout_gravity="start"
         android:background="?attr/backgroundColor"
         android:maxWidth="310dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:headerLayout="@layout/nav_header"
         app:itemIconTint="@drawable/nav_foreground_selector"
         app:itemTextAppearance="@style/nav_item_theme"

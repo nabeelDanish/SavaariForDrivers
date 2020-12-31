@@ -2,7 +2,7 @@ package com.example.savaari_driver.entity;
 
 import com.google.android.gms.maps.model.LatLng;
 
-public class User
+public abstract class User
 {
     // Flags
     public static final int DEFAULT_ID = -1;

@@ -24,7 +24,7 @@ public class NetworkUtil
     // Main Attributes
     private static NetworkUtil networkUtil = null;
     private static final String TAG = "NetworkUtil";
-    private static final String urlAddress = "https://70b29666419e.ngrok.io/"; // remember to add a "/" at the end of the url
+    private static final String urlAddress = "https://68eeaa6e4524.ngrok.io/"; // remember to add a "/" at the end of the url
 
     // For Wrapping and Unwrapping
     private static final ObjectMapper objectMapper = new ObjectMapper();
@@ -216,7 +216,7 @@ public class NetworkUtil
             String result = sendPost(urlAddress + "persistDriverLogin", jsonObject);
             if (result != null) {
                 JSONObject obj = new JSONObject(result);
-                return obj.getInt("STATUS") == 200;
+                return obj.getInt("STATUS_CODE") == 200;
             } else {
                 return false;
             }
