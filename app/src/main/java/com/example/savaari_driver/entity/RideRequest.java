@@ -34,7 +34,7 @@ public class RideRequest {
     protected Location dropoffLocation;
     private String dropoffTitle;
     protected int findStatus;
-    protected Integer paymentMethod;
+    protected int paymentMethod;
     private RideType rideType;
     private boolean splittingFare;
 

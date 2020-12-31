@@ -1,7 +1,6 @@
 package com.example.savaari_driver.ride;
 
 // Imports
-
 import android.Manifest;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
@@ -34,7 +33,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.GravityCompat;
@@ -48,7 +46,7 @@ import com.example.savaari_driver.R;
 import com.example.savaari_driver.SavaariApplication;
 import com.example.savaari_driver.Util;
 import com.example.savaari_driver.entity.Driver;
-import com.example.savaari_driver.entity.Ride;
+import com.example.savaari_driver.entity.RideRequest;
 import com.example.savaari_driver.entity.Vehicle;
 import com.example.savaari_driver.register.RegisterActivity;
 import com.example.savaari_driver.ride.adapter.OnItemClickListener;
@@ -111,7 +109,11 @@ public class RideActivity
     private final String TAG = RideActivity.this.getClass().getCanonicalName();
 
     // Flags
+    boolean canLoadUserData = false;
+    boolean isUserDataLoaded = false;
     boolean matchMakingStarted = false;
+    boolean isTakingRide = false;
+    boolean isActive = false;
 
     // Map related Variables
     private static final String FINE_LOCATION = Manifest.permission.ACCESS_FINE_LOCATION;
@@ -160,16 +162,14 @@ public class RideActivity
             moveCamera(new LatLng(location.getLatitude(), location.getLongitude()), false);
 
             // Saving User Location and check if user data loaded
-            rideViewModel.setUserCoordinates(location.getLatitude(), location.getLongitude());
-            if (rideViewModel.isLiveUserDataLoaded().getValue() != null)
-            {
-                if (!rideViewModel.isLiveUserDataLoaded().getValue())
-                    loadUserData();
-            } else {
+            saveUserLocation(location);
+
+            // Loading User Data if not already loaded!
+            if (!isUserDataLoaded && canLoadUserData)
                 loadUserData();
-            }
         }
     };
+
     // ---------------------------------------------------------------------------------------------
     //                                    Main Methods
     // ---------------------------------------------------------------------------------------------
@@ -194,7 +194,6 @@ public class RideActivity
             Toast.makeText(this, "No network connection", Toast.LENGTH_SHORT).show();
         }
         int USER_ID = recvIntent.getIntExtra("USER_ID", -1);
-
         if (USER_ID == -1) {
             SharedPreferences sh
                     = getSharedPreferences("AuthSharedPref",
@@ -203,299 +202,267 @@ public class RideActivity
             USER_ID = sh.getInt("USER_ID", -1);
         }
 
+        // Setting Stuff
         if (USER_ID == -1) {
             Toast.makeText(RideActivity.this, "Sorry. We can not authenticate you", Toast.LENGTH_LONG).show();
         }
         else {
-            // UI Elements
-            centerGPSButton = findViewById(R.id.user_location);
-            centerGPSButton.setEnabled(true);
-            rideStatusBar = findViewById(R.id.bottomAppBar2);
-            progressBar = findViewById(R.id.progressBar);
-            progressBar.setVisibility(View.VISIBLE);
-
-            rideDetailsPanel = findViewById(R.id.ride_detail_sub_panel);
-            riderNameView = findViewById(R.id.rider_name);
-            riderRatingBar = findViewById(R.id.rider_rating);
-
-            rideDetailsPanel.setVisibility(View.INVISIBLE);
-
-            vehicleSelectLayout = findViewById(R.id.select_vehicle_card);
-
-            rateRideCard = findViewById(R.id.end_of_ride_details_panel);
-            feedbackRatingBar = findViewById(R.id.feedback_rating_bar);
-            submitRating = findViewById(R.id.submit_rating);
+            // Checking services and getting permissions
+            getLocationPermission();
 
             // Getting View Model
             rideViewModel = new ViewModelProvider(this, new RideViewModelFactory(USER_ID,
                     ((SavaariApplication) this.getApplication()).getRepository())
             ).get(RideViewModel.class);
 
-            // Checking services and getting permissions
-            getLocationPermission();
-
-            // -------------------------------------------------------------------------------------
-            //                                  DATA OBSERVERS
-            // -------------------------------------------------------------------------------------
-
-            // User Data Loaded
-            rideViewModel.isLiveUserDataLoaded().observe(this, aBoolean -> {
-                if (aBoolean != null) {
-                    if (aBoolean) {
-                        // Setting UI Elements
-                        navUsername.setText(rideViewModel.getDriver().getUsername());
-                        navEmail.setText(rideViewModel.getDriver().getEmailAddress());
-                        Toast.makeText(RideActivity.this, "User data loaded!", Toast.LENGTH_SHORT).show();
-                        matchmakingControllerBtn.setEnabled(true);
-                        progressBar.setVisibility(View.INVISIBLE);
-
-                        // Calling a check if the Ride was found already
-                        rideViewModel.checkRideRequestStatus();
-                    } else {
-                        Toast.makeText(RideActivity.this, "Data could not be loaded", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-
-            // -------------------------------------------------------------------------------------
-            //                              MATCHMAKING OBSERVERS
-            // -------------------------------------------------------------------------------------
-
-            // Creating the Observer for Ride Taking
-            rideViewModel.getIsTakingRide().observe(RideActivity.this, integer ->
-            {
-                progressBar.setVisibility(View.INVISIBLE);
-                if (integer == 1)
-                {
-                    matchmakingControllerBtn.setVisibility(View.GONE);
-
-                    // Create the Map Maker to Rider Location
-                    MarkerOptions options = new MarkerOptions()
-                            .position(rideViewModel.getRide().getRideParameters().getPickupLocation().toLatLng())
-                            .title("Pickup");
-                    pickupMarker = googleMap.addMarker(options);
-
-                    // Debugging Part Starts
-                    Driver temp = rideViewModel.getDriver();
-                    if (temp == null) {
-                        Log.w(TAG, "onCreate: Driver is NULL!");
-                    }
-                    com.example.savaari_driver.entity.Location tempLocation = temp.getCurrentLocation();
-                    if (tempLocation == null) {
-                        Log.w(TAG, "onCreate: Location is NULL!");
-                    }
-                    // Debugging Ends
-
-                    calculateDirections(driverLocation.toLatLng(), pickupMarker, false);
-                    setDestination(rideViewModel.getRide().getRideParameters().getDropoffLocation().toLatLng(), "Destination");
-
-                    // Disable the button
-                    matchmakingControllerBtn.setVisibility(View.INVISIBLE);
-                }
-            });
-
-            // Creating the Observer for On-going Ride Status
-            rideViewModel.RideStatus().observe(RideActivity.this, integer -> {
-                progressBar.setVisibility(View.INVISIBLE);
-                switch (integer)
-                {
-                    case Ride.PICKUP:
-                    {
-                        confirmNearPickupLocation();
-                        break;
-                    }
-                    case Ride.DRIVER_ARRIVED:
-                    {
-                        // Do Something
-                        rideStatusBar.setText("Waiting for Rider");
-                        matchmakingControllerBtn.setVisibility(View.VISIBLE);
-                        matchmakingControllerBtn.setText(R.string.start_ride);
-                        matchmakingControllerBtn.setEnabled(true);
-                        break;
-                    }
-                    case Ride.STARTED:
-                    {
-                        rideStatusBar.setText("Ride Started");
-                        break;
-                    }
-                    case Ride.NEAR_DROPFF:
-                    {
-                        confirmEndRide();
-                        break;
-                    }
-                    case Ride.TAKE_PAYMENT:
-                    {
-                        Double distanceTravelled = (rideViewModel.getRide().getDistanceTravelled()) / 1000;
-                        String text = String.format("You Travelled %.1f km", distanceTravelled);
-                        rideStatusBar.setText(text);
-
-                        matchmakingControllerBtn.setVisibility(View.VISIBLE);
-                        matchmakingControllerBtn.setEnabled(true);
-                        matchmakingControllerBtn.setText("TAKE PAYMENT");
-                        break;
-                    }
-                }
-            }); // End of Observer: Ride Status
-
-            // Observer for Ride found
-            rideViewModel.isRideFound().observe(this, aBoolean -> {
-                progressBar.setVisibility(View.INVISIBLE);
-                if (aBoolean != null) {
-                    if (aBoolean) {
-                        confirmRideRequest();
-                    } else {
-                        matchMakingStarted = false;
-                        driverActiveState();
-                    }
-                }
-            });
-
-            // Start The Ride Matchmaking Service
-            rideViewModel.isMarkedActive().observe(this, aBoolean -> {
-                progressBar.setVisibility(View.INVISIBLE);
-                if (aBoolean)
-                {
-                    driverActiveState();
-                }
-                else {
-                    if (rideViewModel.getVehicleSelected().getValue() != null)
-                    {
-                        if (rideViewModel.getVehicleSelected().getValue() > 0) {
-                            matchmakingControllerBtn.setText("ACTIVE");
-                        } else {
-                            matchmakingControllerBtn.setText("SELECT VEHICLE");
-                        }
-                    } else {
-                        if (matchmakingControllerBtn != null)
-                            matchmakingControllerBtn.setText("SELECT VEHICLE");
-                    }
-                    rideStatusBar.setText("Your Offline");
-                }
-            });
-
-            // Observing Ride Rating Flag
-            rideViewModel.getGiveRiderFeedback().observe(this, aBoolean -> {
-                progressBar.setVisibility(View.INVISIBLE);
-                if (aBoolean != null) {
-                    if (aBoolean) {
-                        giveFeedback();
-                    } else {
-                        Toast.makeText(RideActivity.this, "Feedback Failed!", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    rateRideCard.setAnimation(Util.outToBottomAnimation());
-                    rateRideCard.setVisibility(View.GONE);
-                }
-            });
+            // Calling Main Observer
+            observeStatusFlag();
         }// End of Else: Location Permission Granted
 
-    }// ------------------------ End of OnCreate() -------------------------------;
+    }// ----------------------------------- End of OnCreate() -------------------------------------;
 
+    // --------------------------------------------------------------------------------------------
+    //                                     MAIN STATUS LISTENER
+    // --------------------------------------------------------------------------------------------
+    private void observeStatusFlag() {
+        rideViewModel.getDriverStatus().observe(this, status ->
+        {
+            if (status != null) {
+                switch (status) {
+                    case RideViewModel.OFFLINE: {
+                        loadUserData();
+                        break;
+                    }
+                    case RideViewModel.DATA_LOAD_SUCCESS: {
+                        onUserDataLoaded();
+                        break;
+                    }
+                    case RideViewModel.DATA_LOAD_FAILURE: {
+                        onUserDataFailure();
+                        break;
+                    }
+                    case RideViewModel.VEHICLE_SELECTED_SUCCESS: {
+                        onVehicleSelected();
+                        break;
+                    }
+                    case RideViewModel.VEHICLE_SELECTED_FAILURE: {
+                        onVehicleFailure();
+                        break;
+                    }
+                    case RideViewModel.MARKED_ACTIVE_SUCCESS: {
+                        onMarkActive();
+                        break;
+                    }
+                    case RideViewModel.MARKED_ACTIVE_FAILURE: {
+                        onMarkActiveFailure();
+                        break;
+                    }
+                    case RideViewModel.MATCHMAKING_STARTED_SUCCESS: {
+                        onMatchmakingStarted();
+                        break;
+                    }
+                    case RideViewModel.MATCHMAKING_STARTED_FAILURE: {
+                        onMatchmakingFailure();
+                        break;
+                    }
+                    case RideViewModel.RIDE_REQUEST_FOUND: {
+                        onRideRequestFound();
+                        break;
+                    }
+                    case RideViewModel.CONFIRM_RIDE_SUCCESS: {
+                        onConfirmRideSuccess();
+                        break;
+                    }
+                    case RideViewModel.CONFIRM_RIDE_FAILURE: {
+                        onConfirmRideFailure();
+                        break;
+                    }
+                    case RideViewModel.NEAR_PICKUP: {
+                        onNearPickup();
+                        break;
+                    }
+                    case RideViewModel.PICKUP_MARK_SUCCESS: {
+                        onNearPickupSuccess();
+                        break;
+                    }
+                    case RideViewModel.PICKUP_MARK_FAILURE: {
+                        onNearPickupFailure();
+                        break;
+                    }
+                    case RideViewModel.RIDE_STARTED_SUCCESS: {
+                        onStartRideSuccess();
+                        break;
+                    }
+                    case RideViewModel.RIDE_STARTED_FAILURE: {
+                        onStartRideFailure();
+                        break;
+                    }
+                    case RideViewModel.NEAR_DEST: {
+                        onNearDestination();
+                        break;
+                    }
+                    case RideViewModel.DEST_MARK_SUCCESS: {
+                        onConfirmEndRideSuccess();
+                        break;
+                    }
+                    case RideViewModel.DEST_MARK_FAILURE: {
+                        onConfirmEndRideFailure();
+                        break;
+                    }
+                    case RideViewModel.PAYMENT_SUCCESS: {
+                        onPaymentSuccess();
+                        break;
+                    }
+                    case RideViewModel.PAYMENT_FAILURE: {
+                        onPaymentFailure();
+                        break;
+                    }
+                    case RideViewModel.FEEDBACK_SUCCESS: {
+                        onFeedbackSuccess();
+                        break;
+                    }
+                    case RideViewModel.FEEDBACK_FAILURE: {
+                        onFeedbackFailure();
+                        break;
+                    }
+                }
+            }// End if: non null
+        });
+    } // End of Observer
+
+    // --------------------------------------------------------------------------------------------
+    //                                     UI FUNCTIONS
+    // --------------------------------------------------------------------------------------------
     /*
      * Initializes View Objects including:
      * centerGPSButton
      * autocompleteFragment
      * Main Button
      */
-    private void init() {
+    private void initUIElements() {
         Log.d(TAG, "init: initializing");
 
         // Initializing UI
         initializeNavigationBar();
 
+        // UI Elements
+        centerGPSButton = findViewById(R.id.user_location);
+        centerGPSButton.setEnabled(true);
+
+        rideStatusBar = findViewById(R.id.bottomAppBar2);
+
+        progressBar = findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
+
+        rideDetailsPanel = findViewById(R.id.ride_detail_sub_panel);
+        rideDetailsPanel.setVisibility(View.INVISIBLE);
+
+        riderNameView = findViewById(R.id.rider_name);
+        riderRatingBar = findViewById(R.id.rider_rating);
+        vehicleSelectLayout = findViewById(R.id.select_vehicle_card);
+        rateRideCard = findViewById(R.id.end_of_ride_details_panel);
+        feedbackRatingBar = findViewById(R.id.feedback_rating_bar);
+        submitRating = findViewById(R.id.submit_rating);
+
         // moveCamera to user location
         centerGPSButton.setOnClickListener(v -> getDeviceLocation());
 
         // Main Button to start Search Ride
+        initializeMainButton();
+
+        // Marking User Offline
+        markOffline();
+    }// End of init call
+
+    // Initializing Navigation Bar
+    private void initializeNavigationBar() {
+        drawer = findViewById(R.id.drawer_layout);
+
+        navigationView = findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+
+        headerView = navigationView.getHeaderView(0);
+        navUsername = headerView.findViewById(R.id.header_nickname);
+        navEmail = headerView.findViewById(R.id.header_email);
+        menuButton = findViewById(R.id.menu_btn);
+
+        menuButton.setOnClickListener(v -> {
+            if (!drawer.isDrawerOpen(GravityCompat.START)) {
+                drawer.openDrawer(GravityCompat.START);
+            }
+        });
+    }
+
+    // ---------------------------------
+    //     MAIN BUTTON Listener
+    // ---------------------------------
+    private void initializeMainButton() {
+
         matchmakingControllerBtn = findViewById(R.id.go_btn);
         matchmakingControllerBtn.setEnabled(false);
-
-        // ---------------------------------
-        //     MAIN BUTTON Listener
-        // ---------------------------------
         matchmakingControllerBtn.setOnClickListener(v ->
         {
+            // UI
             v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
             progressBar.setVisibility(View.VISIBLE);
 
-            // Main Switch case for initiating tasks
-            try {
-                if (rideViewModel.getIsTakingRide().getValue() == 1) {
-                    switch (rideViewModel.RideStatus().getValue()) {
-                        case Ride.DRIVER_ARRIVED: {
-                            startRide();
-                            break;
-                        }
-                        case Ride.NEAR_DROPFF: {
-                            rideViewModel.markDriverAtDestination();
-                            break;
-                        }
-                        case Ride.PICKUP: {
-                            rideViewModel.markArrival();
-                            break;
-                        }
-                        case Ride.TAKE_PAYMENT: {
-                            takePayment();
-                            break;
-                        }
-                    }
-                }
-                else if (rideViewModel.isRideFound().getValue() != null && rideViewModel.isRideFound().getValue())
-                {
-                    rejectRideRequest();
-                }
-                else if (rideViewModel.isMarkedActive().getValue())
-                {
-                    rideViewModel.setMarkActive(0);
-                }
-                else if (rideViewModel.getVehicleSelected().getValue() != null)
-                {
-                    if (rideViewModel.getVehicleSelected().getValue() > 0) {
-                        rideViewModel.setMarkActive(1);
-                    } else {
+            // Flags and Calls
+            Object obj = rideViewModel.getDriverStatus().getValue();
+            if (obj != null)
+            {
+                int status = (int) obj;
+                switch(status) {
+                    case RideViewModel.DATA_LOAD_SUCCESS:
+                    case RideViewModel.VEHICLE_SELECTED_FAILURE: {
                         selectVehicle();
+                        break;
+                    }
+                    case RideViewModel.VEHICLE_SELECTED_SUCCESS:
+                    case RideViewModel.MARKED_ACTIVE_FAILURE: {
+                        setMarkActive();
+                        break;
+                    }
+                    case RideViewModel.MATCHMAKING_STARTED_SUCCESS: {
+                        setMarkDeactivate();
+                        break;
+                    }
+                    case RideViewModel.RIDE_REQUEST_FOUND:
+                    case RideViewModel.CONFIRM_RIDE_FAILURE: {
+                        rejectRideRequest();
+                        break;
+                    }
+                    case RideViewModel.NEAR_PICKUP:
+                    case RideViewModel.PICKUP_MARK_FAILURE: {
+                        confirmNearPickup();
+                        break;
+                    }
+                    case RideViewModel.PICKUP_MARK_SUCCESS:
+                    case RideViewModel.RIDE_STARTED_FAILURE: {
+                        startRide();
+                        break;
+                    }
+                    case RideViewModel.NEAR_DEST:
+                    case RideViewModel.DEST_MARK_FAILURE: {
+                        confirmEndRide();
+                        break;
+                    }
+                    case RideViewModel.DEST_MARK_SUCCESS:
+                    case RideViewModel.PAYMENT_FAILURE: {
+                        takePayment();
+                        break;
                     }
                 }
-                else {
-                    selectVehicle();
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-                Log.d(TAG, "init: Exception in Matchmaking Controller Button!");
             }
         }); // End of Matchmaking Controller Button
-    }// End of init call
+    }
 
     // --------------------------------------------------------------------------------------------
     //                                     MATCH MAKING FUNCTIONS
     // --------------------------------------------------------------------------------------------
-    private void rejectRideRequest()
-    {
-        Log.d(TAG, "rejectRideRequest: called!");
-        rideDetailsPanel.setAnimation(Util.outToBottomAnimation());
-        rideDetailsPanel.setVisibility(View.GONE);
-        rideViewModel.confirmRideRequest(0);
-    }
-    private void driverActiveState() {
-        Log.d(TAG, "driverActiveState: called");
-        if (rideViewModel.isLiveUserDataLoaded().getValue() != null) {
-            Log.d(TAG, "driverActiveState: Inside Condition 1");
-            if (rideViewModel.isLiveUserDataLoaded().getValue()) {
-                Log.d(TAG, "driverActiveState: Inside Condition 2");
-                // Setting UI Elements
-                rideDetailsPanel.setVisibility(View.INVISIBLE);
-                matchmakingControllerBtn.setVisibility(View.VISIBLE);
-                matchmakingControllerBtn.setText("DEACTIVE");
-                rideStatusBar.setText("Your Online");
-                removeMarkersPolyline();
 
-                // Calling View Model
-                if (!matchMakingStarted)
-                    matchMakingStarted = true;
-                    rideViewModel.startMatchMaking();
-            }
-        }
-    }
+    // --------------------------------------------------------------------------------------------
+    // Selecting Vehicle Action
+    // --------------------------------------------------------------------------------------------
     private void selectVehicle()
     {
         // Setting UI
@@ -534,57 +501,287 @@ public class RideActivity
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(vehicleSelectAdapter);
     }
-    private void confirmRideRequest()
-    {
-        Log.d(TAG, "confirmRideRequest: inside UI");
-        // Setting UI Elements
+
+    // Selecting Vehicle Response
+    private void onVehicleSelected() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        vehicleSelectLayout.setAnimation(Util.outToBottomAnimation());
+        vehicleSelectLayout.setVisibility(View.GONE);
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText("ACTIVE");
+    }
+    private void onVehicleFailure() {
+
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "Vehicle Selection Failed!", Toast.LENGTH_SHORT).show();
+    }
+
+
+    // --------------------------------------------------------------------------------------------
+    // Set Mark Active Action
+    // --------------------------------------------------------------------------------------------
+    private void setMarkActive() {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        rideViewModel.setMarkActive(1);
+    }
+    private void setMarkDeactivate() {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        rideViewModel.setMarkActive(0);
+    }
+
+    // Set Mark Active Response
+    private void onMarkActive() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        rideStatusBar.setText("You're Online");
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setText("DEACTIVE");
+
+        // Flags
+        isActive = true;
+        matchMakingStarted = true;
+        rideViewModel.startMatchMaking();
+    }
+
+    private void onMarkActiveFailure() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        rideStatusBar.setText("You're Offline");
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setText("ACTIVE");
+        Toast.makeText(RideActivity.this, "Mark Active Failed!", Toast.LENGTH_SHORT).show();
+
+        // Flags
+        matchMakingStarted = false;
+    }
+
+    // --------------------------------------------------------------------------------------------
+    // Matchmaking Response
+    // --------------------------------------------------------------------------------------------
+    private void onMatchmakingStarted() {
+        // UI
+        rideStatusBar.setText("Searching for Rides");
+
+        // Flags
+    }
+
+    private void onMatchmakingFailure() {
+        // UI
+        Toast.makeText(RideActivity.this, "Matchmaking failed", Toast.LENGTH_SHORT).show();
+
+        // Flags
+        if (isActive)
+            rideViewModel.startMatchMaking();
+    }
+
+    private void onRideRequestFound() {
+        // UI
         rideDetailsPanel.setAnimation(Util.inFromBottomAnimation(400));
         rideDetailsPanel.setVisibility(View.VISIBLE);
         riderNameView.setText(rideViewModel.getRideRequest().getRider().getUsername());
-        // riderRatingBar.setRating(rideViewModel.getRideRequest().getRider().getRating());
-
+        float rating = rideViewModel.getRideRequest().getRider().getRating();
+        String text = String.format("%.1f", rating);
+        riderRatingBar.setText(text);
         matchmakingControllerBtn.setVisibility(View.VISIBLE);
         matchmakingControllerBtn.setText("CANCEL");
-
-        // Setting Button Action
         rideDetailsPanel.setOnClickListener(view -> {
-            rideDetailsPanel.setVisibility(View.INVISIBLE);
-            // Handle Confirm Ride Request
-            progressBar.setVisibility(View.VISIBLE);
-
-            // Calling View Model
-            rideViewModel.confirmRideRequest(1);
+            confirmRideRequest();
         });
+        rideStatusBar.setText("Ride Found");
+        // Flags
     }
 
-    private void confirmNearPickupLocation() {
+    // --------------------------------------------------------------------------------------------
+    //  Ride Request Confirm or Reject Action
+    // --------------------------------------------------------------------------------------------
 
-        rideViewModel.getNearPickup().observe(this, aBoolean -> {
-            if (aBoolean) {
-                matchmakingControllerBtn.setVisibility(View.VISIBLE);
-                matchmakingControllerBtn.setEnabled(true);
-                matchmakingControllerBtn.setText("MARK ARRIVAL");
-                rideStatusBar.setText("Near Pickup");
+    // Actions
+    private void confirmRideRequest() {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        isTakingRide = true;
+        rideViewModel.confirmRideRequest(1);
+    }
+    private void rejectRideRequest()
+    {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        isTakingRide = false;
+        rideViewModel.confirmRideRequest(0);
+    }
+
+    // Responses
+    private void onConfirmRideSuccess() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        rideDetailsPanel.setAnimation(Util.outToBottomAnimation());
+        rideDetailsPanel.setVisibility(View.GONE);
+
+        if (isTakingRide) {
+            // Create the Map Maker to Rider Location
+            MarkerOptions options = new MarkerOptions()
+                    .position(rideViewModel.getRide().getRideParameters().getPickupLocation().toLatLng())
+                    .title("Pickup");
+            pickupMarker = googleMap.addMarker(options);
+
+            // Debugging Part Starts
+            Driver temp = rideViewModel.getDriver();
+            if (temp == null) {
+                Log.w(TAG, "onCreate: Driver is NULL!");
             }
-        });
+            com.example.savaari_driver.entity.Location tempLocation = temp.getCurrentLocation();
+            if (tempLocation == null) {
+                Log.w(TAG, "onCreate: Location is NULL!");
+            }
+            // Debugging Ends
+
+            calculateDirections(driverLocation.toLatLng(), pickupMarker, false);
+            setDestination(rideViewModel.getRide().getRideParameters().getDropoffLocation().toLatLng(), "Destination");
+
+            // Disable the button
+            matchmakingControllerBtn.setVisibility(View.INVISIBLE);
+        }
+
+        // Flags
+        if (!isTakingRide) {
+            rideViewModel.startMatchMaking();
+        }
     }
+    private void onConfirmRideFailure() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "Confirm Ride failed!", Toast.LENGTH_SHORT).show();
+        rideDetailsPanel.setAnimation(Util.outToBottomAnimation());
+        rideDetailsPanel.setVisibility(View.GONE);
+
+        // Flags
+        rideViewModel.setMarkActive(1);
+    }
+
+    // --------------------------------------------------------------------------------------------
+    //  Pickup Request Actions and Response
+    // --------------------------------------------------------------------------------------------
+    // Action
+    private void onNearPickup() {
+        // UI
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText("MARK ARRIVAL");
+        rideStatusBar.setText("Near Pickup");
+
+        // Flags
+
+    }
+    private void confirmNearPickup() {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        rideViewModel.markArrival();
+    }
+    // Response
+    private void onNearPickupSuccess() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        rideStatusBar.setText("Waiting for Rider");
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText("START RIDE");
+
+        // Flags
+    }
+    private void onNearPickupFailure() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "Pickup failed!", Toast.LENGTH_SHORT).show();
+
+        // Flags
+    }
+
+    // --------------------------------------------------------------------------------------------
+    //  Starting Ride Request and Response
+    // --------------------------------------------------------------------------------------------
+    // Action
     private void startRide()
     {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        getDeviceLocation();
         rideViewModel.startRide();
+    }
+    // Response
+    private void onStartRideSuccess() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
         matchmakingControllerBtn.setVisibility(View.INVISIBLE);
         matchmakingControllerBtn.setEnabled(false);
-        getDeviceLocation();
+        rideStatusBar.setText("Ride Started!");
+    }
+    private void onStartRideFailure() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "Ride Started Failed!", Toast.LENGTH_SHORT).show();
     }
 
-    private void confirmEndRide()
-    {
+    // --------------------------------------------------------------------------------------------
+    //  End Ride Request and Response
+    // --------------------------------------------------------------------------------------------
+    // Action
+    private void onNearDestination() {
+        // UI
         matchmakingControllerBtn.setVisibility(View.VISIBLE);
         matchmakingControllerBtn.setEnabled(true);
         matchmakingControllerBtn.setText(R.string.confirmRideEnd);
+        rideStatusBar.setText("Near Destination");
+    }
+    private void confirmEndRide()
+    {
+        // UI
+        progressBar.setVisibility(View.VISIBLE);
+
+        // Flags
+        rideViewModel.markDriverAtDestination();
+    }
+    // Response
+    private void onConfirmEndRideSuccess() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        matchmakingControllerBtn.setVisibility(View.VISIBLE);
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText("TAKE PAYMENT");
+        Double distanceTravelled = (rideViewModel.getRide().getDistanceTravelled()) / 1000;
+        String text = String.format("You Travelled %.1f km", distanceTravelled);
+        rideStatusBar.setText(text);
+
+        // Flags
+    }
+    private void onConfirmEndRideFailure() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "End Ride Failed!", Toast.LENGTH_SHORT).show();
+
+        // Flags
     }
 
+    // --------------------------------------------------------------------------------------------
+    //  Take Payment Action and Response
+    // --------------------------------------------------------------------------------------------
+    // Action
     private void takePayment() {
-
         final String[] m_Text = {""};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Ride Completed");
@@ -598,14 +795,21 @@ public class RideActivity
 
         // Set up the buttons
         builder.setPositiveButton("OK", (dialog, which) -> {
+            // UI
+            progressBar.setVisibility(View.VISIBLE);
+            // Calling Ride View Model
             m_Text[0] = input.getText().toString();
             rideViewModel.endRideWithPayment(Double.parseDouble(m_Text[0]));
         });
+
         builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
         builder.show();
     }
-    private void giveFeedback()
-    {
+    // Response
+    private void onPaymentSuccess() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        removeMarkersPolyline();
         // Setting UI
         rateRideCard.setAnimation(Util.inFromBottomAnimation(400));
         rateRideCard.setVisibility(View.VISIBLE);
@@ -616,16 +820,104 @@ public class RideActivity
             float rating = feedbackRatingBar.getRating();
 
             // Calling Ride View Model
-            rideViewModel.giveRiderFeedback(rating);
+            giveFeedback(rating);
         });
+    }
+    private void onPaymentFailure() {
+        // UI
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "Payment Failed", Toast.LENGTH_SHORT).show();
+    }
+    // --------------------------------------------------------------------------------------------
+    //  Feedback Action and Response
+    // --------------------------------------------------------------------------------------------
+    // Action
+    private void giveFeedback(float rating)
+    {
+        rideViewModel.giveRiderFeedback(rating);
+    }
+    private void onFeedbackSuccess() {
+        // Setting UI
+        progressBar.setVisibility(View.INVISIBLE);
+        rateRideCard.setAnimation(Util.inFromBottomAnimation(400));
+        rateRideCard.setVisibility(View.VISIBLE);
+
+        // Flags
+        rideViewModel.resetFlags();
+    }
+    private void onFeedbackFailure() {
+        // Setting UI
+        progressBar.setVisibility(View.INVISIBLE);
+        rateRideCard.setAnimation(Util.inFromBottomAnimation(400));
+        rateRideCard.setVisibility(View.VISIBLE);
+
+        // Flags
+        rideViewModel.resetFlags();
     }
 
     // --------------------------------------------------------------------------------------------
     //                                  DATA RELATED OPERATIONS
     // --------------------------------------------------------------------------------------------
+
+    /* Marking User Offline */
+    private void markOffline() {
+        rideViewModel.markOffline();
+    }
+
+    /* Saving User Location */
+    private void saveUserLocation(Location location) {
+        rideViewModel.setUserCoordinates(location.getLatitude(), location.getLongitude());
+    }
+
     /* Loads user data from database */
     private void loadUserData() {
         rideViewModel.loadUserData();
+    }
+
+    /* On User Data Loaded */
+    private void onUserDataLoaded() {
+        // Setting UI Elements
+        navUsername.setText(rideViewModel.getDriver().getUsername());
+        navEmail.setText(rideViewModel.getDriver().getEmailAddress());
+        matchmakingControllerBtn.setEnabled(true);
+        matchmakingControllerBtn.setText("SELECT VEHICLE");
+        rideStatusBar.setText("You're Offline");
+        progressBar.setVisibility(View.INVISIBLE);
+        Toast.makeText(RideActivity.this, "User data loaded!", Toast.LENGTH_SHORT).show();
+
+        // Flags and Calls
+        isUserDataLoaded = true;
+        canLoadUserData = false;
+        isActive = false;
+        checkFlags();
+    }
+
+    /* On User Data Failure */
+    private void onUserDataFailure() {
+        // UI
+        Toast.makeText(RideActivity.this, "Data could not be loaded", Toast.LENGTH_SHORT).show();
+        matchmakingControllerBtn.setEnabled(false);
+        matchmakingControllerBtn.setText("SELECT VEHICLE");
+        rideStatusBar.setText("You're Offline");
+
+        // Flags and Calls
+        isUserDataLoaded = false;
+        canLoadUserData = true;
+    }
+
+    /* Checking all the flags to determine status */
+    private void checkFlags() {
+        // Main Function for Checking all Flags
+        Driver tempDriver = rideViewModel.getDriver();
+        if (tempDriver.isActive())
+        {
+            if (tempDriver.getRideRequestStatus() == RideRequest.MS_REQ_ACCEPTED) {
+                // Calling Ride View Model to get the Ride Object
+                rideViewModel.getStartingRideForDriver();
+            } else {
+                rideViewModel.setMarkActive(1);
+            }
+        }
     }
 
     /* Function for loading User Location Data */
@@ -770,13 +1062,6 @@ public class RideActivity
             if (ActivityCompat.checkSelfPermission(this,
                     Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                     && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissi ons
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return;
             }
             googleMap.setMyLocationEnabled(true);
@@ -784,8 +1069,8 @@ public class RideActivity
             googleMap.getUiSettings().setMyLocationButtonEnabled(false);
             googleMap.setOnInfoWindowClickListener(this);
 
-            // Initializing View Model
-            init();
+            // Initializing UI
+            initUIElements();
         }
     }
 
@@ -828,24 +1113,6 @@ public class RideActivity
         calculateDirections(rideViewModel.getRide().getRideParameters().getPickupLocation().toLatLng(),
                 destinationMarker, true);
     }
-    private void initializeNavigationBar() {
-        drawer = findViewById(R.id.drawer_layout);
-
-        navigationView = findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-
-        headerView = navigationView.getHeaderView(0);
-        navUsername = headerView.findViewById(R.id.header_nickname);
-        navEmail = headerView.findViewById(R.id.header_email);
-        menuButton = findViewById(R.id.menu_btn);
-
-        menuButton.setOnClickListener(v -> {
-            if (!drawer.isDrawerOpen(GravityCompat.START)) {
-                drawer.openDrawer(GravityCompat.START);
-            }
-        });
-    }
-
     /* Get's device location, calls moveCamera()*/
     private void getDeviceLocation() {
         Log.d("getDeviceLocation", "getting device location");
@@ -870,7 +1137,9 @@ public class RideActivity
                         // Calling User Location Save Function
                         try {
                             moveCamera(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude()), true);
-                            rideViewModel.setUserCoordinates(currentLocation.getLatitude(), currentLocation.getLongitude());
+
+                            // Saving User Location
+                            saveUserLocation(currentLocation);
                             LocationUpdateUtil.saveUserLocation(rideViewModel.getDriver().getCurrentLocation().toLatLng(), RideActivity.this);
 
                             // Starting Background Location Service
@@ -1128,22 +1397,8 @@ public class RideActivity
         // Calling RideViewModel to Select this vehicle
         rideViewModel.selectVehicle(vehicleTypeItems.get(position).getIndexInArray());
 
-        // Observing Response
+        // Setting UI
         progressBar.setVisibility(View.VISIBLE);
-        rideViewModel.getVehicleSelected().observe(this, integer -> {
-            if (integer != null) {
-                progressBar.setVisibility(View.INVISIBLE);
-
-                if (integer > 0) {
-                    vehicleSelectLayout.setAnimation(Util.outToBottomAnimation());
-                    vehicleSelectLayout.setVisibility(View.GONE);
-                    matchmakingControllerBtn.setEnabled(true);
-                    matchmakingControllerBtn.setText("ACTIVE");
-                } else {
-                    // Toast.makeText(RideActivity.this, "Vehicle Selection Failed!", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
     } // End of OnClick Function
 } // End of Class: RideActivity:
 /* Code By Nabeel Danish & Farjad Ilyas */
